@@ -36,6 +36,14 @@
     button:hover { opacity: 0.9; }
     .select2-container--default .select2-selection--single { height: calc(2.25rem + 2px); padding: 6px 12px; border-radius: 5px; border: 1px solid #ccc; }
     .select2-container .select2-selection--multiple { min-height: calc(2.25rem + 2px); border-radius: 5px; border: 1px solid #ccc; padding: 4px 8px; }
+
+    /* 👇 Preview Mode Styling */
+    .readonly input,
+    .readonly select,
+    .readonly textarea {
+      background-color: #e9ecef !important;
+      pointer-events: none;
+    }
   </style>
 </head>
 
@@ -80,7 +88,8 @@
   <div class="main-content" style="margin-top:80px;">
     <h2 class="text-center mb-4">Shipment Booking Form</h2>
 
-    <form id="bookingForm" method="POST"
+    <!-- 👇 Added readonly class initially -->
+    <form id="bookingForm" class="readonly" method="POST"
       action="https://script.google.com/macros/s/AKfycbwfaqdFiy9_nDZ4ygiw8ht0JZH5nPztCJeaHiiexeDJH7XhZopoYup49LZ1YV2PyvPQ/exec">
 
       <div class="row">
@@ -158,7 +167,7 @@
         </div>
       </div>
 
-      <!-- ✅ Updated Commercial Invoice Section -->
+      <!-- Commercial Invoice -->
       <div class="section">
         <h3>
           <a class="btn btn-link text-white" data-bs-toggle="collapse" href="#invoiceSection" role="button" aria-expanded="false" aria-controls="invoiceSection">
@@ -228,6 +237,8 @@
       <div class="form-actions">
         <button type="button" class="cancel" onclick="document.getElementById('bookingForm').reset();">Cancel Booking</button>
         <button type="submit">Submit Booking</button>
+        <!-- 👇 New Button Added -->
+        <button type="button" id="toggleEdit" class="btn btn-success">🆕 New Booking</button>
       </div>
     </form>
   </div>
@@ -252,6 +263,19 @@
       $(".country-select").select2({ placeholder: "Select country", allowClear: true, width: '100%' });
       $(".service-select").select2({ placeholder: "Select or type service", tags: true, tokenSeparators: [','], width: '100%' });
 
+      // ✅ Toggle between Preview and Edit Mode
+      $("#toggleEdit").click(function () {
+        const form = $("#bookingForm");
+        if (form.hasClass("readonly")) {
+          form.removeClass("readonly");
+          $(this).text("🔒 Preview Mode");
+        } else {
+          form.addClass("readonly");
+          $(this).text("🆕 New Booking");
+        }
+      });
+
+      // ✅ Submission Script
       $("#bookingForm").submit(function (e) {
         e.preventDefault();
         var $form = $(this);
@@ -280,7 +304,7 @@
       });
     });
 
-    // Invoice Calculation
+    // Invoice Calculations
     function calculateRow(row) {
       let qty = parseFloat(row.find(".qty").val()) || 0;
       let rate = parseFloat(row.find(".rate").val()) || 0;
@@ -314,15 +338,4 @@
           <td><input type="number" step="0.01" class="form-control value" name="value[]" readonly></td>
           <td><button type="button" class="btn btn-danger btn-sm deleteRow">🗑</button></td>
         </tr>`;
-      $("#invoiceTable tbody").append(newRow);
-    });
-
-    $(document).on("click", ".deleteRow", function () {
-      $(this).closest("tr").fadeOut(200, function () {
-        $(this).remove();
-        calculateTotals();
-      });
-    });
-  </script>
-</body>
-</html>
+      $("#
