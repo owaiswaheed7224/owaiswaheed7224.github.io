@@ -158,7 +158,6 @@
         </div>
       </div>
 
-      <!-- Commercial Invoice (Collapsible Section Integrated) -->
       <!-- Commercial Invoice (Collapsible) -->
       <div class="section">
         <h3>
@@ -173,7 +172,7 @@
                 <th>Description</th>
                 <th>Qty</th>
                 <th>Unit</th>
-                <th>Rate</</th>
+                <th>Rate</th>
                 <th>Value</th>
                 <th>❌</th>
               </tr>
@@ -268,7 +267,7 @@
       });
     });
 
-    // Commercial Invoice Functions
+    // ===== Commercial Invoice Functions =====
     function calculateRow(row) {
       let qty = parseFloat(row.find(".qty").val()) || 0;
       let rate = parseFloat(row.find(".rate").val()) || 0;
