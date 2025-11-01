@@ -25,7 +25,7 @@
     .navbar-custom .nav-link, .navbar-custom .dropdown-toggle { color: #fff; }
     .navbar-custom .dropdown-menu { right: 0; left: auto; }
     .main-content { margin-left: 260px; padding: 20px; }
-    form { width: 100%; margin: 0; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    form { width: 100%; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
     .section { margin-top: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 15px; }
     .section h3 { background: #007bff; color: #fff; margin: -15px -15px 15px -15px; padding: 10px; border-radius: 8px 8px 0 0; font-size: 16px; }
     label { font-weight: bold; display: block; margin-top: 10px; }
@@ -81,13 +81,14 @@
     <form id="bookingForm" method="POST"
       action="https://script.google.com/macros/s/AKfycbwfaqdFiy9_nDZ4ygiw8ht0JZH5nPztCJeaHiiexeDJH7XhZopoYup49LZ1YV2PyvPQ/exec">
 
-      <!-- Shipper & Receiver sections (same as before) -->
-      <!-- ... (no changes to form fields above) ... -->
+      <!-- Shipper & Receiver sections remain the same -->
+      <!-- ... -->
 
-      <!-- Commercial Invoice -->
+      <!-- ✅ Fixed Commercial Invoice Section -->
       <div class="section">
         <h3>
-          <a class="btn btn-link text-white" data-bs-toggle="collapse" href="#invoiceSection" role="button" aria-expanded="false" aria-controls="invoiceSection">
+          <a class="btn btn-link text-white" data-bs-toggle="collapse" href="#invoiceSection" role="button"
+            aria-expanded="false" aria-controls="invoiceSection">
             Commercial Invoice
           </a>
         </h3>
@@ -131,6 +132,9 @@
           </table>
         </div>
       </div>
+
+      <!-- Charges section -->
+      <!-- (no changes) -->
 
       <div class="form-actions">
         <button type="button" class="cancel" onclick="document.getElementById('bookingForm').reset();">Cancel Booking</button>
@@ -189,6 +193,7 @@
           <td><button type="button" class="btn btn-danger btn-sm deleteRow">🗑</button></td>
         </tr>`;
         $("#invoiceTable tbody").append(newRow);
+        const collapse = new bootstrap.Collapse($('#invoiceSection'), { show: true });
       });
 
       $(document).on("click", ".deleteRow", function () {
