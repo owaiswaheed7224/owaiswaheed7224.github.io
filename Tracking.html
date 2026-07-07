@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impresto Courier - Track Shipment</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    background:#fff;
+}
+
+/* Header */
+.header{
+    background:#000;
+    padding:15px 8%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    color:#d4af37;
+    font-size:28px;
+    font-weight:bold;
+}
+
+.logo span{
+    color:#fff;
+}
+
+.nav a{
+    color:#fff;
+    text-decoration:none;
+    margin-left:25px;
+    transition:.3s;
+}
+
+.nav a:hover{
+    color:#d4af37;
+}
+
+/* Hero */
+.hero{
+    min-height:350px;
+    background:linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+    url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1600&q=80');
+    background-size:cover;
+    background-position:center;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    color:white;
+    padding:30px;
+}
+
+.hero-content h1{
+    font-size:50px;
+    margin-bottom:15px;
+}
+
+.hero-content p{
+    color:#ddd;
+    margin-bottom:30px;
+}
+
+/* Tracking Box */
+.track-box{
+    background:white;
+    max-width:850px;
+    margin:-70px auto 40px;
+    border-radius:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,.15);
+    padding:30px;
+}
+
+.track-box h2{
+    text-align:center;
+    color:#000;
+    margin-bottom:25px;
+}
+
+.track-form{
+    display:flex;
+    gap:15px;
+}
+
+.track-form input{
+    flex:1;
+    padding:15px;
+    border:2px solid #ddd;
+    border-radius:8px;
+    font-size:16px;
+}
+
+.track-form button{
+    background:#d4af37;
+    color:#000;
+    border:none;
+    padding:15px 35px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:.3s;
+}
+
+.track-form button:hover{
+    background:#000;
+    color:#d4af37;
+}
+
+/* Result */
+.result{
+    margin-top:30px;
+}
+
+.status-card{
+    border-left:6px solid #d4af37;
+    background:#f8f8f8;
+    padding:20px;
+    border-radius:10px;
+}
+
+.status-card h3{
+    color:#000;
+    margin-bottom:10px;
+}
+
+.status{
+    color:green;
+    font-weight:bold;
+}
+
+.timeline{
+    margin-top:30px;
+}
+
+.step{
+    display:flex;
+    gap:15px;
+    margin-bottom:25px;
+}
+
+.icon{
+    width:45px;
+    height:45px;
+    background:#d4af37;
+    color:#000;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+}
+
+.step h4{
+    color:#000;
+    margin-bottom:5px;
+}
+
+.step p{
+    color:#666;
+}
+
+/* Footer */
+.footer{
+    background:#000;
+    color:white;
+    text-align:center;
+    padding:20px;
+    margin-top:40px;
+}
+
+.footer span{
+    color:#d4af37;
+}
+
+/* Responsive */
+@media(max-width:768px){
+
+.hero-content h1{
+    font-size:34px;
+}
+
+.track-form{
+    flex-direction:column;
+}
+
+.nav{
+    display:none;
+}
+
+.track-box{
+    margin:-50px 15px 30px;
+}
+
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">Impresto <span>Courier</span></div>
+
+    <nav class="nav">
+        <a href="#">Home</a>
+        <a href="#">Services</a>
+        <a href="#">Tracking</a>
+        <a href="#">Contact</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="hero-content">
+        <h1>Track Your Shipment</h1>
+        <p>Fast, Reliable & Secure Courier Tracking</p>
+    </div>
+</section>
+
+<div class="track-box">
+
+    <h2>Shipment Tracking</h2>
+
+    <div class="track-form">
+        <input type="text" placeholder="Enter Tracking Number">
+        <button>
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Track
+        </button>
+    </div>
+
+    <div class="result">
+
+        <div class="status-card">
+            <h3>Tracking Number: IMP123456789</h3>
+            <p><strong>Current Status:</strong>
+            <span class="status">Out For Delivery</span></p>
+        </div>
+
+        <div class="timeline">
+
+            <div class="step">
+                <div class="icon">
+                    <i class="fa-solid fa-box"></i>
+                </div>
+                <div>
+                    <h4>Shipment Created</h4>
+                    <p>05 July 2026 - Karachi</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="icon">
+                    <i class="fa-solid fa-truck"></i>
+                </div>
+                <div>
+                    <h4>In Transit</h4>
+                    <p>06 July 2026 - Lahore Hub</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="icon">
+                    <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <div>
+                    <h4>Out For Delivery</h4>
+                    <p>07 July 2026 - Destination City</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<footer class="footer">
+    © 2026 <span>Impresto Courier & Logistics</span> | All Rights Reserved
+</footer>
+
+</body>
+</html>
