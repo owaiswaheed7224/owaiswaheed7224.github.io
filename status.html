@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Shipments - Arham Courier & Logistics</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:245px;background:#0d6efd;color:#fff;padding:22px 15px;z-index:10}
+.logo-box{background:#fff;color:#0d6efd;border-radius:12px;padding:16px 10px;text-align:center;margin-bottom:25px;font-weight:800}
+.nav-title{font-size:11px;text-transform:uppercase;opacity:.65;margin:20px 10px 8px}
+.side-link{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;color:#fff;text-decoration:none;padding:12px 13px;border-radius:9px;margin-bottom:5px;font-size:14px;cursor:pointer}
+.side-link:hover,.side-link.active{background:rgba(255,255,255,.18)}
+.main{margin-left:245px;min-height:100vh}.topbar{height:72px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 30px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.top-title{font-weight:700;font-size:20px}.content{max-width:1100px;margin:30px auto;padding:0 22px}
+.search-card,.shipment-card{background:#fff;border-radius:16px;box-shadow:0 6px 25px rgba(0,0,0,.07)}
+.search-card{padding:28px;margin-bottom:24px}.page-title{font-size:25px;font-weight:700}.muted{color:#6b7280}
+.search-row{display:flex;gap:12px;margin-top:22px}.search-row input{flex:1;height:50px;border:1px solid #d1d5db;border-radius:10px;padding:0 16px}
+.btn-primary-custom{height:50px;padding:0 28px;border:0;border-radius:10px;background:#0d6efd;color:#fff;font-weight:600}
+#shipmentSection{display:none}.shipment-head{padding:20px 25px;background:#f8fafc;border-bottom:1px solid #e5e7eb}.awb{color:#0d6efd;font-size:19px;font-weight:700}
+.details{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e5e7eb}.detail{background:#fff;padding:21px}
+.label{font-size:11px;text-transform:uppercase;color:#6b7280;font-weight:700;margin-bottom:7px}.value{font-weight:600}
+.status-area{padding:25px}.add-status{width:100%;padding:14px;border:2px dashed #0d6efd;color:#0d6efd;background:#f8fbff;border-radius:10px;font-weight:700}
+#statusForm{display:none;margin-top:18px;padding:22px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px}textarea{min-height:105px;resize:vertical}
+.history{margin-top:25px}.history-item{position:relative;margin-left:10px;padding:18px 20px 18px 48px;border-left:3px solid #0d6efd;background:#f8fafc;border-radius:0 10px 10px 0;margin-bottom:12px}
+.dot{position:absolute;left:-8px;top:22px;width:13px;height:13px;border-radius:50%;background:#0d6efd;border:3px solid #fff;box-shadow:0 0 0 1px #0d6efd}
+.status-text{font-weight:700}.meta{color:#6b7280;font-size:13px;margin-top:6px}.loc{font-size:14px;font-weight:600;margin-top:7px}
+.alert-box{display:none;margin-top:15px;padding:12px 15px;border-radius:9px;font-size:14px}.error{background:#fee2e2;color:#991b1b}.success{background:#dcfce7;color:#166534}
+@media(max-width:800px){.sidebar{width:70px;padding:15px 8px}.logo-box{font-size:0;padding:13px 5px}.logo-box:after{content:"AC";font-size:16px}.side-link span{display:none}.side-link{justify-content:center}.main{margin-left:70px}.details{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.topbar{padding:0 15px}.content{padding:0 12px}.search-row{flex-direction:column}.btn-primary-custom{width:100%}.details{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+<div class="logo-box">ARHAM COURIER & LOGISTICS</div>
+<div class="nav-title">Operations</div>
+<button class="side-link"><i class="bi bi-box-seam"></i><span>Shipment Booking</span></button>
+<button class="side-link"><i class="bi bi-search"></i><span>Searching Booking</span></button>
+<button class="side-link active"><i class="bi bi-geo-alt"></i><span>Track Shipments</span></button>
+<button class="side-link"><i class="bi bi-person-check"></i><span>Signup Approvals</span></button>
+<button class="side-link"><i class="bi bi-calculator"></i><span>Rate Inquiry</span></button>
+<button class="side-link"><i class="bi bi-people"></i><span>Account List</span></button>
+</aside>
+
+<main class="main">
+<header class="topbar"><div class="top-title">Track Shipments</div><div class="muted"><i class="bi bi-shield-lock"></i> Internal Portal</div></header>
+<section class="content">
+<div class="search-card">
+<div class="page-title">Internal Shipment Status</div>
+<div class="muted">Enter a shipment number to view the booking and update its movement history.</div>
+<div class="search-row">
+<input id="shipmentNumber" type="text" placeholder="Enter Shipment / AWB Number" onkeypress="enterSearch(event)">
+<button class="btn-primary-custom" onclick="searchShipment()"><i class="bi bi-search"></i> Search</button>
+</div>
+<div id="alertBox" class="alert-box"></div>
+</div>
+
+<div id="shipmentSection" class="shipment-card">
+<div class="shipment-head"><div class="label">Shipment Number</div><div id="displayShipmentNumber" class="awb"></div></div>
+<div class="details">
+<div class="detail"><div class="label">Customer Name</div><div id="customerName" class="value">—</div></div>
+<div class="detail"><div class="label">Consignee Name</div><div id="consigneeName" class="value">—</div></div>
+<div class="detail"><div class="label">Booking Date</div><div id="bookingDate" class="value">—</div></div>
+<div class="detail"><div class="label">Weight</div><div id="weight" class="value">—</div></div>
+</div>
+<div class="status-area">
+<h5 class="fw-bold mb-3">Shipment Status History</h5>
+<button class="add-status" onclick="openStatusForm()"><i class="bi bi-plus-circle"></i> Add Status</button>
+<div id="statusForm">
+<div class="mb-3"><label class="form-label fw-semibold">Shipment History / Status</label>
+<textarea id="statusText" class="form-control" placeholder="Example: Shipment picked up from customer"></textarea></div>
+<div class="row g-3">
+<div class="col-md-6"><label class="form-label fw-semibold">Date & Time</label><input id="statusDateTime" type="datetime-local" class="form-control"></div>
+<div class="col-md-3"><label class="form-label fw-semibold">Country</label><input id="country" type="text" class="form-control" placeholder="Pakistan"></div>
+<div class="col-md-3"><label class="form-label fw-semibold">City</label><input id="city" type="text" class="form-control" placeholder="Karachi"></div>
+</div>
+<div class="mt-3"><button id="submitButton" class="btn btn-primary" onclick="submitStatus()"><i class="bi bi-check-circle"></i> Submit Status</button>
+<button class="btn btn-light ms-2" onclick="closeStatusForm()">Cancel</button></div>
+</div>
+<div id="historyList" class="history"></div>
+</div>
+</div>
+</section>
+</main>
+
+<script>
+let currentShipment="";
+function enterSearch(e){if(e.key==="Enter")searchShipment()}
+function showAlert(message,type){const box=document.getElementById("alertBox");box.textContent=message;box.className="alert-box "+(type==="success"?"success":"error");box.style.display="block"}
+function searchShipment(){
+ const shipment=document.getElementById("shipmentNumber").value.trim();
+ if(!shipment){showAlert("Please enter shipment number.","error");return}
+ document.getElementById("shipmentSection").style.display="none";
+ google.script.run.withSuccessHandler(function(result){
+   if(!result.success){showAlert(result.message,"error");return}
+   currentShipment=result.shipment.shipmentNumber;
+   document.getElementById("displayShipmentNumber").textContent=currentShipment;
+   document.getElementById("customerName").textContent=result.shipment.customerName||"—";
+   document.getElementById("consigneeName").textContent=result.shipment.consigneeName||"—";
+   document.getElementById("bookingDate").textContent=result.shipment.bookingDate||"—";
+   document.getElementById("weight").textContent=result.shipment.weight?result.shipment.weight+" KG":"—";
+   renderHistory(result.history);
+   document.getElementById("shipmentSection").style.display="block";
+   document.getElementById("alertBox").style.display="none";
+ }).withFailureHandler(function(err){showAlert("System error: "+err.message,"error")}).searchShipmentStatus(shipment);
+}
+function openStatusForm(){
+ document.getElementById("statusForm").style.display="block";
+ const now=new Date();
+ document.getElementById("statusDateTime").value=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+ document.getElementById("statusText").focus();
+}
+function closeStatusForm(){document.getElementById("statusForm").style.display="none"}
+function submitStatus(){
+ const status=document.getElementById("statusText").value.trim(),dateTime=document.getElementById("statusDateTime").value,country=document.getElementById("country").value.trim(),city=document.getElementById("city").value.trim();
+ if(!status||!dateTime||!country||!city){showAlert("Please complete all status fields.","error");return}
+ const btn=document.getElementById("submitButton");btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> Saving...';
+ google.script.run.withSuccessHandler(function(result){
+   btn.disabled=false;btn.innerHTML='<i class="bi bi-check-circle"></i> Submit Status';
+   if(!result.success){showAlert(result.message,"error");return}
+   document.getElementById("statusText").value="";document.getElementById("country").value="";document.getElementById("city").value="";
+   closeStatusForm();renderHistory(result.history);showAlert("Shipment status added successfully.","success");
+ }).withFailureHandler(function(err){btn.disabled=false;btn.innerHTML='<i class="bi bi-check-circle"></i> Submit Status';showAlert("System error: "+err.message,"error")})
+ .addShipmentStatus({shipmentNumber:currentShipment,status:status,dateTime:dateTime,country:country,city:city});
+}
+function renderHistory(history){
+ const box=document.getElementById("historyList");
+ if(!history||!history.length){box.innerHTML='<div class="text-center text-muted py-4"><i class="bi bi-clock-history" style="font-size:34px"></i><div class="mt-2">No status history yet.</div></div>';return}
+ box.innerHTML=history.map(function(item){return '<div class="history-item"><div class="dot"></div><div class="status-text">'+escapeHtml(item.status)+'</div><div class="meta"><i class="bi bi-calendar3"></i> '+escapeHtml(item.dateTime)+'</div><div class="loc"><i class="bi bi-geo-alt-fill text-primary"></i> '+escapeHtml(item.city)+', '+escapeHtml(item.country)+'</div></div>'}).join("");
+}
+function escapeHtml(v){return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+</script>
+</body>
+</html>
