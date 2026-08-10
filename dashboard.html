@@ -41,7 +41,7 @@
       border-radius: 8px;
       transition: 0.3s;
     }
-    .sidebar a:hover { background: #0b5ed7; }
+    .sidebar a:hover, .sidebar a.active { background: #0b5ed7; box-shadow: inset 4px 0 0 #fff; }
 
     /* Main content */
     .main-content {
@@ -89,13 +89,13 @@
     <!-- ✅ Client Features -->
     <a href="https://owaiswaheed7224.github.io/booking.html" class="client-feature" id="shipBook">📦 Shipment Booking</a>
     <a href="#" class="client-feature" id="searchBook">🔍 Searching Booking</a>
-    <a href="#" class="client-feature" id="trackShip">🚚 Track Shipments</a>
-    <a href="#" class="client-feature" id="rateInq">💰 Rate Inquiry</a>
+    <a href="tracking.html" class="client-feature" id="trackShip">🚚 Track Shipments</a>
+    <a href="rateinquiry.html" class="client-feature" id="rateInq">💰 Rate Inquiry</a>
 
     <!-- ✅ Admin Features -->
     <a href="pending.html" class="admin-only">⏳ Pending Signups</a>
     <a href="approved.html" class="admin-only">✅ Approved Signups</a>
-    <a href="#" class="admin-only">📃 Account List</a>
+    <a href="accountlist.html" class="admin-only">📃 Account List</a>
     <a href="manageclients.html" class="admin-only">👥 Manage Clients</a>
   </div>
 
@@ -192,6 +192,16 @@
             document.getElementById(id).style.display = data[id] ? "block" : "none";
           });
         }
+      }
+    });
+
+
+    // Sidebar active item
+    const currentPage = window.location.pathname.split("/").pop() || "dashboard.html";
+    document.querySelectorAll(".sidebar a[href]").forEach(link => {
+      const href = link.getAttribute("href");
+      if (href && !href.startsWith("#") && href.split("/").pop() === currentPage) {
+        link.classList.add("active");
       }
     });
 
