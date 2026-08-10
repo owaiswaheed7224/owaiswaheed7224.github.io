@@ -573,35 +573,19 @@ footer{
 </footer>
 
 <script>
-const shipments = {
-  "ARH10001": {
-    status:"In Transit",
-    origin:"Karachi, Pakistan",
-    destination:"Dubai, UAE",
-    lastUpdate:"10 Aug 2026",
-    events:[
-      ["Shipment Picked Up","Karachi, Pakistan","10 Aug 2026"],
-      ["Departed Origin Facility","Karachi, Pakistan","10 Aug 2026"],
-      ["In Transit","International Transit","10 Aug 2026"]
-    ]
-  },
-  "ARH10002": {
-    status:"Delivered",
-    origin:"Karachi, Pakistan",
-    destination:"London, UK",
-    lastUpdate:"09 Aug 2026",
-    events:[
-      ["Shipment Booked","Karachi, Pakistan","06 Aug 2026"],
-      ["Shipment Picked Up","Karachi, Pakistan","06 Aug 2026"],
-      ["Departed Origin Facility","Karachi, Pakistan","07 Aug 2026"],
-      ["Arrived at Destination","London, UK","08 Aug 2026"],
-      ["Delivered","London, UK","09 Aug 2026"]
-    ]
-  }
-};
+const TRACKING_API_URL = "https://script.google.com/macros/s/AKfycbwFGbq2qQw_wXx1vKKry5rJPL6TlPYYUMJMyOpoCM7T67TyfKta9t97wvOCkjdlC2_B/exec";
+
+function escapeHtml(v){
+  return String(v ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
 
 function trackShipment(){
-  const no=document.getElementById("trackingNo").value.trim().toUpperCase();
+  const no=document.getElementById("trackingNo").value.trim();
   const result=document.getElementById("result");
 
   if(!no){
@@ -609,45 +593,95 @@ function trackShipment(){
     return;
   }
 
-  const s=shipments[no];
+  result.innerHTML='<div class="result-card"><div style="text-align:center;padding:30px">Searching shipment...</div></div>';
 
-  if(!s){
-    result.innerHTML='<div class="error"><h3>Tracking Number Not Found</h3><p>No shipment record was found for <strong>'+no+'</strong>.</p><p style="margin-top:6px">Please check the tracking number and try again.</p></div>';
-    return;
-  }
+  const callbackName="publicTrack_"+Date.now();
 
-  const events=s.events.map(e=>`
-    <div class="event">
-      <div class="event-dot"></div>
-      <h4>${e[0]}</h4>
-      <p>${e[1]} &nbsp;•&nbsp; ${e[2]}</p>
-    </div>
-  `).join("");
+  window[callbackName]=function(data){
+    try{
+      if(!data || !data.success){
+        result.innerHTML='<div class="error"><h3>Tracking Number Not Found</h3><p>'
+          +escapeHtml((data&&data.message)||("No shipment record was found for "+no+"."))
+          +'</p><p style="margin-top:6px">Please check the tracking number and try again.</p></div>';
+        return;
+      }
 
-  result.innerHTML=`
-    <div class="result-card">
-      <div class="result-top">
-        <div>
-          <div class="label">TRACKING NUMBER</div>
-          <div class="number">${no}</div>
+      const s=data.shipment || {};
+      const history=Array.isArray(data.history) ? data.history : [];
+      const latest=history.length ? history[0] : null;
+      const currentStatus=latest ? latest.status : "Shipment Booked";
+      const origin=[s.shipCity,s.shipCountry].filter(Boolean).join(", ") || "—";
+      const destination=[s.receiverCity,s.receiverCountry].filter(Boolean).join(", ") || "—";
+      const lastUpdate=latest ? latest.dateTime : (s.bookingDate || "—");
+
+      const events=history.map(function(item){
+        return `
+          <div class="event">
+            <div class="event-dot"></div>
+            <h4>${escapeHtml(item.status)}</h4>
+            <p>${escapeHtml(item.city)}, ${escapeHtml(item.country)} &nbsp;•&nbsp; ${escapeHtml(item.dateTime)}</p>
+          </div>
+        `;
+      }).join("");
+
+      result.innerHTML=`
+        <div class="result-card">
+          <div class="result-top">
+            <div>
+              <div class="label">TRACKING NUMBER</div>
+              <div class="number">${escapeHtml(s.shipmentNumber || no)}</div>
+            </div>
+            <div class="status">● &nbsp;${escapeHtml(currentStatus)}</div>
+          </div>
+
+          <div class="details">
+            <div class="detail"><small>Origin</small><strong>${escapeHtml(origin)}</strong></div>
+            <div class="detail"><small>Destination</small><strong>${escapeHtml(destination)}</strong></div>
+            <div class="detail"><small>Last Update</small><strong>${escapeHtml(lastUpdate)}</strong></div>
+          </div>
+
+          <div class="details" style="margin-top:12px">
+            <div class="detail"><small>Customer</small><strong>${escapeHtml(s.customerName || "—")}</strong></div>
+            <div class="detail"><small>Consignee</small><strong>${escapeHtml(s.consigneeName || "—")}</strong></div>
+            <div class="detail"><small>Weight</small><strong>${escapeHtml(s.weight ? s.weight+" KG" : "—")}</strong></div>
+          </div>
+
+          <div class="history">
+            <h3>Shipment History</h3>
+            <div class="timeline">
+              ${events || '<div style="padding:20px 0;color:#777">No tracking updates have been added yet.</div>'}
+            </div>
+          </div>
         </div>
-        <div class="status">● &nbsp;${s.status}</div>
-      </div>
+      `;
 
-      <div class="details">
-        <div class="detail"><small>Origin</small><strong>${s.origin}</strong></div>
-        <div class="detail"><small>Destination</small><strong>${s.destination}</strong></div>
-        <div class="detail"><small>Last Update</small><strong>${s.lastUpdate}</strong></div>
-      </div>
+      result.scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(err){
+      result.innerHTML='<div class="error"><h3>Unable to display shipment</h3><p>'
+        +escapeHtml(err.message)
+        +'</p></div>';
+    }finally{
+      delete window[callbackName];
+      const oldScript=document.getElementById(callbackName);
+      if(oldScript) oldScript.remove();
+    }
+  };
 
-      <div class="history">
-        <h3>Shipment History</h3>
-        <div class="timeline">${events}</div>
-      </div>
-    </div>
-  `;
+  const script=document.createElement("script");
+  script.id=callbackName;
+  script.src=TRACKING_API_URL
+    +"?action=searchshipmentstatus"
+    +"&awb="+encodeURIComponent(no)
+    +"&callback="+encodeURIComponent(callbackName)
+    +"&_="+Date.now();
 
-  document.getElementById("result").scrollIntoView({behavior:"smooth",block:"start"});
+  script.onerror=function(){
+    delete window[callbackName];
+    script.remove();
+    result.innerHTML='<div class="error"><h3>Tracking Service Unavailable</h3><p>Unable to connect to the tracking server. Please try again.</p></div>';
+  };
+
+  document.body.appendChild(script);
 }
 
 document.getElementById("trackingNo").addEventListener("keydown",function(e){
