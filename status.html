@@ -176,45 +176,142 @@ onAuthStateChanged(auth, async (user) => {
 });
 </script>
 <script>
+const TRACKING_API_URL="https://script.google.com/macros/s/AKfycbwFGbq2qQw_wXx1vKKry5rJPL6TlPYYUMJMyOpoCM7T67TyfKta9t97wvOCkjdlC2_B/exec";
 let currentShipment="";
 function enterSearch(e){if(e.key==="Enter")searchShipment()}
 function showAlert(message,type){const box=document.getElementById("alertBox");box.textContent=message;box.className="alert-box "+(type==="success"?"success":"error");box.style.display="block"}
 function searchShipment(){
  const shipment=document.getElementById("shipmentNumber").value.trim();
  if(!shipment){showAlert("Please enter shipment number.","error");return}
+
  document.getElementById("shipmentSection").style.display="none";
- google.script.run.withSuccessHandler(function(result){
-   if(!result.success){showAlert(result.message,"error");return}
-   currentShipment=result.shipment.shipmentNumber;
-   document.getElementById("displayShipmentNumber").textContent=currentShipment;
-   document.getElementById("customerName").textContent=result.shipment.customerName||"—";
-   document.getElementById("consigneeName").textContent=result.shipment.consigneeName||"—";
-   document.getElementById("bookingDate").textContent=result.shipment.bookingDate||"—";
-   document.getElementById("weight").textContent=result.shipment.weight?result.shipment.weight+" KG":"—";
-   renderHistory(result.history);
-   document.getElementById("shipmentSection").style.display="block";
-   document.getElementById("alertBox").style.display="none";
- }).withFailureHandler(function(err){showAlert("System error: "+err.message,"error")}).searchShipmentStatus(shipment);
+
+ const callbackName="shipmentSearch_"+Date.now();
+
+ window[callbackName]=function(result){
+   try{
+     if(!result || !result.success){
+       showAlert((result&&result.message)||"Shipment not found.","error");
+       return;
+     }
+
+     currentShipment=result.shipment.shipmentNumber;
+     document.getElementById("displayShipmentNumber").textContent=currentShipment;
+     document.getElementById("customerName").textContent=result.shipment.customerName||"—";
+     document.getElementById("consigneeName").textContent=result.shipment.consigneeName||"—";
+     document.getElementById("bookingDate").textContent=result.shipment.bookingDate||"—";
+     document.getElementById("weight").textContent=result.shipment.weight?result.shipment.weight+" KG":"—";
+
+     renderHistory(result.history||[]);
+     document.getElementById("shipmentSection").style.display="block";
+     document.getElementById("alertBox").style.display="none";
+   }catch(err){
+     showAlert("System error: "+err.message,"error");
+   }finally{
+     delete window[callbackName];
+     const oldScript=document.getElementById(callbackName);
+     if(oldScript) oldScript.remove();
+   }
+ };
+
+ const script=document.createElement("script");
+ script.id=callbackName;
+ script.src=TRACKING_API_URL
+   +"?action=searchshipmentstatus"
+   +"&awb="+encodeURIComponent(shipment)
+   +"&callback="+encodeURIComponent(callbackName)
+   +"&_="+Date.now();
+
+ script.onerror=function(){
+   delete window[callbackName];
+   script.remove();
+   showAlert("Unable to connect to shipment tracking server.","error");
+ };
+
+ document.body.appendChild(script);
 }
+
 function openStatusForm(){
  document.getElementById("statusForm").style.display="block";
  const now=new Date();
  document.getElementById("statusDateTime").value=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
  document.getElementById("statusText").focus();
 }
-function closeStatusForm(){document.getElementById("statusForm").style.display="none"}
-function submitStatus(){
- const status=document.getElementById("statusText").value.trim(),dateTime=document.getElementById("statusDateTime").value,country=document.getElementById("country").value.trim(),city=document.getElementById("city").value.trim();
- if(!status||!dateTime||!country||!city){showAlert("Please complete all status fields.","error");return}
- const btn=document.getElementById("submitButton");btn.disabled=true;btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> Saving...';
- google.script.run.withSuccessHandler(function(result){
-   btn.disabled=false;btn.innerHTML='<i class="bi bi-check-circle"></i> Submit Status';
-   if(!result.success){showAlert(result.message,"error");return}
-   document.getElementById("statusText").value="";document.getElementById("country").value="";document.getElementById("city").value="";
-   closeStatusForm();renderHistory(result.history);showAlert("Shipment status added successfully.","success");
- }).withFailureHandler(function(err){btn.disabled=false;btn.innerHTML='<i class="bi bi-check-circle"></i> Submit Status';showAlert("System error: "+err.message,"error")})
- .addShipmentStatus({shipmentNumber:currentShipment,status:status,dateTime:dateTime,country:country,city:city});
+
+function closeStatusForm(){
+ document.getElementById("statusForm").style.display="none";
 }
+
+function submitStatus(){
+ const status=document.getElementById("statusText").value.trim();
+ const dateTime=document.getElementById("statusDateTime").value;
+ const country=document.getElementById("country").value.trim();
+ const city=document.getElementById("city").value.trim();
+
+ if(!status||!dateTime||!country||!city){
+   showAlert("Please complete all status fields.","error");
+   return;
+ }
+
+ if(!currentShipment){
+   showAlert("Please search a shipment first.","error");
+   return;
+ }
+
+ const btn=document.getElementById("submitButton");
+ btn.disabled=true;
+ btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+ const callbackName="statusAdd_"+Date.now();
+
+ window[callbackName]=function(result){
+   try{
+     if(!result || !result.success){
+       showAlert((result&&result.message)||"Unable to add status.","error");
+       return;
+     }
+
+     document.getElementById("statusText").value="";
+     document.getElementById("country").value="";
+     document.getElementById("city").value="";
+
+     closeStatusForm();
+     renderHistory(result.history||[]);
+     showAlert("Shipment status added successfully.","success");
+   }catch(err){
+     showAlert("System error: "+err.message,"error");
+   }finally{
+     btn.disabled=false;
+     btn.innerHTML='<i class="bi bi-check-circle"></i> Submit Status';
+     delete window[callbackName];
+     const oldScript=document.getElementById(callbackName);
+     if(oldScript) oldScript.remove();
+   }
+ };
+
+ const script=document.createElement("script");
+ script.id=callbackName;
+ script.src=TRACKING_API_URL
+   +"?action=addshipmentstatus"
+   +"&awb="+encodeURIComponent(currentShipment)
+   +"&status="+encodeURIComponent(status)
+   +"&dateTime="+encodeURIComponent(dateTime)
+   +"&country="+encodeURIComponent(country)
+   +"&city="+encodeURIComponent(city)
+   +"&callback="+encodeURIComponent(callbackName)
+   +"&_="+Date.now();
+
+ script.onerror=function(){
+   btn.disabled=false;
+   btn.innerHTML='<i class="bi bi-check-circle"></i> Submit Status';
+   delete window[callbackName];
+   script.remove();
+   showAlert("Unable to connect to shipment tracking server.","error");
+ };
+
+ document.body.appendChild(script);
+}
+
 function renderHistory(history){
  const box=document.getElementById("historyList");
  if(!history||!history.length){box.innerHTML='<div class="text-center text-muted py-4"><i class="bi bi-clock-history" style="font-size:34px"></i><div class="mt-2">No status history yet.</div></div>';return}
