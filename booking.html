@@ -130,6 +130,131 @@
       margin-top: 20px;
     }
 
+    /* Booking submission / print controls */
+    .booking-title-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      margin-bottom: 24px;
+    }
+
+    .booking-title-row h2 {
+      margin: 0 !important;
+    }
+
+    .booking-print-btn {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      display: none;
+      background: #198754;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .booking-print-btn:hover {
+      background: #157347;
+      opacity: 1;
+    }
+
+    .booking-loading {
+      display: none;
+      text-align: center;
+      margin-top: -14px;
+      margin-bottom: 18px;
+    }
+
+    .booking-loading .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid #dbe8ff;
+      border-top-color: #0d6efd;
+      border-radius: 50%;
+      animation: bookingSpin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .booking-loading span {
+      margin-left: 8px;
+      color: #0d6efd;
+      font-size: 13px;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    @keyframes bookingSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 700px) {
+      .booking-title-row {
+        justify-content: flex-start;
+        padding-right: 120px;
+      }
+
+      .booking-print-btn {
+        padding: 7px 10px;
+        font-size: 12px;
+      }
+    }
+
+    /* Print/PDF layout */
+    @media print {
+      body {
+        background: #fff !important;
+      }
+
+      .sidebar,
+      .navbar-custom,
+      .form-actions,
+      .booking-print-btn,
+      .booking-loading,
+      #addRow,
+      #addWeightRow,
+      .deleteRow,
+      .deleteWeightRow {
+        display: none !important;
+      }
+
+      .main-content {
+        margin: 0 !important;
+        padding: 10px !important;
+      }
+
+      form {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+      }
+
+      .section {
+        break-inside: avoid;
+      }
+
+      input,
+      select,
+      textarea {
+        color: #000 !important;
+        background: #fff !important;
+      }
+
+      .select2-container {
+        display: none !important;
+      }
+
+      .booking-title-row {
+        justify-content: center;
+      }
+    }
+
     button {
       background: #007bff;
       color: #fff;
@@ -211,7 +336,14 @@
 
   <!-- Main Content -->
   <div class="main-content" style="margin-top:80px;">
-    <h2 class="text-center mb-4">Shipment Booking Form</h2>
+    <div class="booking-title-row">
+      <h2>Shipment Booking Form</h2>
+      <button type="button" id="printBooking" class="booking-print-btn">🖨 Print / PDF</button>
+    </div>
+
+    <div id="bookingLoading" class="booking-loading" aria-live="polite">
+      <span class="spinner"></span><span>Submitting booking...</span>
+    </div>
 
     <form id="bookingForm"
       class="readonly"
@@ -665,6 +797,8 @@
           $toggleEdit.hide();
           $(".cancel").show();
           $("#submitBooking").show();
+          $("#printBooking").hide();
+          $("#bookingLoading").hide();
         }
       });
 
@@ -687,12 +821,18 @@
 
         $(".cancel").hide();
         $("#submitBooking").hide();
+        $("#printBooking").hide();
+        $("#bookingLoading").hide();
         $toggleEdit.text("🆕 New Booking").show();
       });
 
       // 📨 SUBMIT BOOKING
       $form.on("submit", function (e) {
         e.preventDefault();
+
+        const $submitButton = $("#submitBooking");
+        const $loading = $("#bookingLoading");
+        const $printButton = $("#printBooking");
 
         // If Manual / Custom Service is selected, put its typed value
         // into the normal "service" field expected by Google Apps Script.
@@ -720,21 +860,39 @@
         calculateInvoice();
         calculateWeightPerforma();
 
+        // Show the small round buffering spinner under the heading.
+        $submitButton.prop("disabled", true);
+        $loading.css("display", "block");
+        $printButton.hide();
+
         $.ajax({
           url: $form.attr("action"),
           method: "POST",
           data: $form.serialize(),
 
           success: function () {
-            alert("✅ Booking Submitted Successfully!");
             // Keep the submitted data visible in read-only preview mode.
             clearAndFreezeBooking();
+
+            // Hide spinner and show Print / PDF button beside the heading.
+            $loading.hide();
+            $printButton.css("display", "block");
+            $submitButton.prop("disabled", false);
           },
 
           error: function () {
+            $loading.hide();
+            $submitButton.prop("disabled", false);
             alert("❌ Submission failed. Try again.");
           }
         });
+      });
+
+      // 🖨 PRINT / PDF
+      // Opens the browser print window. From there choose "Save as PDF"
+      // to create/open the booking as a PDF.
+      $("#printBooking").on("click", function () {
+        window.print();
       });
 
       // Initial calculations.
