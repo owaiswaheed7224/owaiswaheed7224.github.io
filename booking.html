@@ -258,7 +258,10 @@
               <option value="Door to Door">Door to Door</option>
               <option value="Port to Port">Port to Port</option>
               <option value="Express">Express</option>
+              <option value="__manual__">✍️ Manual / Custom Service</option>
             </select>
+            <input type="text" id="manualService" class="form-control mt-2"
+              placeholder="Type manual service name..." style="display:none;">
 
             <label>Type</label>
             <select class="form-control" name="type" required>
@@ -294,11 +297,8 @@
 
       <!-- Commercial Invoice -->
       <div class="section">
-        <h3>
-          <a class="btn btn-link text-white" data-bs-toggle="collapse" href="#invoiceSection" role="button" aria-expanded="false"
-            aria-controls="invoiceSection">Commercial Invoice</a>
-        </h3>
-        <div class="collapse" id="invoiceSection">
+        <h3>Commercial Invoice</h3>
+        <div id="invoiceSection">
           <table class="table table-bordered text-center align-middle" id="invoiceTable">
             <thead class="table-secondary">
               <tr>
@@ -314,7 +314,7 @@
               <tr>
                 <td><textarea class="form-control desc" name="description[]"></textarea></td>
                 <td><input type="number" class="form-control qty" name="qty[]" value="0"></td>
-                <td><input type="text" class="form-control unit" name="unit[]" placeholder="pcs"></td>
+                <td><input type="text" class="form-control unit" name="unit[]" value="pcs"></td>
                 <td><input type="number" step="0.01" class="form-control rate" name="rate[]" value="0"></td>
                 <td><input type="number" step="0.01" class="form-control value" name="value[]" readonly></td>
                 <td><button type="button" class="btn btn-danger btn-sm deleteRow">🗑</button></td>
@@ -376,49 +376,235 @@
       "Saudi Arabia", "Germany", "France", "Canada", "Australia", "Japan"
     ];
 
+    // Always use today's local date (not UTC).
+    function getTodayLocal() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function setToday() {
+      $('input[name="date"]').val(getTodayLocal());
+    }
+
+    function calculateInvoice() {
+      let totalQty = 0;
+      let totalValue = 0;
+
+      $("#invoiceTable tbody tr").each(function () {
+        const qty = parseFloat($(this).find(".qty").val()) || 0;
+        const rate = parseFloat($(this).find(".rate").val()) || 0;
+
+        // Value = Qty × Rate
+        const value = qty * rate;
+
+        $(this).find(".value").val(value.toFixed(2));
+
+        totalQty += qty;
+        totalValue += value;
+      });
+
+      $("#totalQty").val(totalQty);
+      $("#totalValue").val(totalValue.toFixed(2));
+    }
+
+    function addInvoiceRow() {
+      const row = `
+        <tr>
+          <td><textarea class="form-control desc" name="description[]"></textarea></td>
+          <td><input type="number" min="0" class="form-control qty" name="qty[]" value="0"></td>
+          <td><input type="text" class="form-control unit" name="unit[]" value="pcs"></td>
+          <td><input type="number" min="0" step="0.01" class="form-control rate" name="rate[]" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control value" name="value[]" value="0.00" readonly></td>
+          <td><button type="button" class="btn btn-danger btn-sm deleteRow">🗑</button></td>
+        </tr>`;
+      $("#invoiceTable tbody").append(row);
+      calculateInvoice();
+    }
+
+    function resetInvoiceRows() {
+      const $tbody = $("#invoiceTable tbody");
+
+      $tbody.html(`
+        <tr>
+          <td><textarea class="form-control desc" name="description[]"></textarea></td>
+          <td><input type="number" min="0" class="form-control qty" name="qty[]" value="0"></td>
+          <td><input type="text" class="form-control unit" name="unit[]" value="pcs"></td>
+          <td><input type="number" min="0" step="0.01" class="form-control rate" name="rate[]" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control value" name="value[]" value="0.00" readonly></td>
+          <td><button type="button" class="btn btn-danger btn-sm deleteRow">🗑</button></td>
+        </tr>`);
+
+      calculateInvoice();
+    }
+
+    function clearAndFreezeBooking() {
+      const form = $("#bookingForm")[0];
+
+      // Native reset first.
+      form.reset();
+
+      // Clear Select2 controls.
+      $(".country-select, .service-select").val(null).trigger("change");
+
+      // Clear manual service field.
+      $("#manualService").val("").hide();
+
+      // Rebuild invoice as one clean row.
+      resetInvoiceRows();
+
+      // Keep today's date as the default date.
+      setToday();
+
+      // Freeze the form again.
+      $("#bookingForm").addClass("readonly");
+
+      // Show New Booking button again.
+      $("#toggleEdit").text("🆕 New Booking").show();
+    }
+
     $(document).ready(function () {
+      // Populate countries.
       $(".country-select").each(function () {
         const $sel = $(this);
         countries.forEach(c => $sel.append(new Option(c, c)));
       });
 
-      $(".country-select").select2({ placeholder: "Select country", allowClear: true, width: '100%' });
-      $(".service-select").select2({ placeholder: "Select or type service", tags: true, tokenSeparators: [','], width: '100%' });
+      // Select2.
+      $(".country-select").select2({
+        placeholder: "Select country",
+        allowClear: true,
+        width: "100%"
+      });
+
+      $(".service-select").select2({
+        placeholder: "Select or type service",
+        tags: true,
+        tokenSeparators: [","],
+        width: "100%"
+      });
 
       const $form = $("#bookingForm");
       const $toggleEdit = $("#toggleEdit");
 
-      // 🆕 NEW BOOKING Button Click
-      $toggleEdit.click(function () {
-        if ($form.hasClass("readonly")) {
-          // Enter edit mode
-          $form.removeClass("readonly");
-          $form[0].reset();
-          $(".country-select, .service-select").val(null).trigger("change");
-          $toggleEdit.hide(); // hide button
+      // Default date = today.
+      setToday();
+
+      // Invoice calculations: Qty × Rate = Value, plus totals.
+      $(document).on("input change", "#invoiceTable .qty, #invoiceTable .rate", function () {
+        calculateInvoice();
+      });
+
+      // Add invoice row.
+      $("#addRow").on("click", function () {
+        addInvoiceRow();
+      });
+
+      // Delete invoice row. Keep at least one row.
+      $(document).on("click", ".deleteRow", function () {
+        const rowCount = $("#invoiceTable tbody tr").length;
+
+        if (rowCount > 1) {
+          $(this).closest("tr").remove();
+        } else {
+          $(this).closest("tr").find("textarea, input").each(function () {
+            if ($(this).hasClass("unit")) {
+              $(this).val("pcs");
+            } else if ($(this).hasClass("qty") || $(this).hasClass("rate")) {
+              $(this).val("0");
+            } else if ($(this).hasClass("value")) {
+              $(this).val("0.00");
+            } else {
+              $(this).val("");
+            }
+          });
+        }
+
+        calculateInvoice();
+      });
+
+      // Manual/custom service.
+      $(".service-select").on("change", function () {
+        const selected = $(this).val();
+
+        if (selected === "__manual__") {
+          $("#manualService").show().focus();
+        } else {
+          $("#manualService").hide().val("");
         }
       });
 
-      // 📨 Submit Button
+      // 🆕 NEW BOOKING
+      $toggleEdit.on("click", function () {
+        if ($form.hasClass("readonly")) {
+          // Start a completely fresh booking.
+          $form[0].reset();
+          $(".country-select").val(null).trigger("change");
+          $(".service-select").val(null).trigger("change");
+          $("#manualService").val("").hide();
+
+          resetInvoiceRows();
+          setToday();
+
+          $form.removeClass("readonly");
+          $toggleEdit.hide();
+        }
+      });
+
+      // ❌ CANCEL BOOKING
+      $(".cancel").on("click", function () {
+        clearAndFreezeBooking();
+      });
+
+      // 📨 SUBMIT BOOKING
       $form.on("submit", function (e) {
         e.preventDefault();
+
+        // If Manual / Custom Service is selected, put its typed value
+        // into the normal "service" field expected by Google Apps Script.
+        const $service = $(".service-select");
+        const selectedService = $service.val();
+
+        if (selectedService === "__manual__") {
+          const manual = $.trim($("#manualService").val());
+
+          if (!manual) {
+            alert("Please enter a manual service name.");
+            $("#manualService").focus();
+            return;
+          }
+
+          // Create/select the custom value so serialize() sends service=...
+          if ($service.find('option[value="' + manual.replace(/"/g, '\\"') + '"]').length === 0) {
+            const option = new Option(manual, manual, true, true);
+            $service.append(option).trigger("change");
+          } else {
+            $service.val(manual).trigger("change");
+          }
+        }
+
+        calculateInvoice();
 
         $.ajax({
           url: $form.attr("action"),
           method: "POST",
           data: $form.serialize(),
+
           success: function () {
             alert("✅ Booking Submitted Successfully!");
-            $form[0].reset();
-            $(".country-select, .service-select").val(null).trigger("change");
-            $form.addClass("readonly");
-            $toggleEdit.text("🆕 New Booking").show(); // bring back button
+            clearAndFreezeBooking();
           },
+
           error: function () {
             alert("❌ Submission failed. Try again.");
           }
         });
       });
+
+      // Initial invoice calculation.
+      calculateInvoice();
     });
   </script>
 
