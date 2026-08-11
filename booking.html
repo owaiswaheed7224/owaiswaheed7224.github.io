@@ -227,6 +227,8 @@
             <input type="date" name="date" required>
             <label>AWB Number</label>
             <input type="text" name="awb_number" required>
+            <label>Reference Number</label>
+            <input type="text" name="reference_number">
             <label>Shipper Company</label>
             <input type="text" name="shipper_company">
             <label>Shipper Name</label>
@@ -523,20 +525,22 @@
     function clearAndFreezeBooking() {
       const form = $("#bookingForm")[0];
 
-      form.reset();
-      $(".country-select, .service-select").val(null).trigger("change");
-      $("#manualService").val("").hide();
-
-      resetInvoiceRows();
-      resetWeightRows();
-      setToday();
-
+      // Keep the submitted data visible as a read-only preview.
       $("#bookingForm").addClass("readonly");
 
-      // Only New Booking is visible in the frozen state.
+      // Disable all form controls so the submitted booking cannot be edited.
+      $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", true);
+
+      // Select2 needs its own disabled state.
+      $(".country-select, .service-select").prop("disabled", true).trigger("change");
+
+      // Hide editing/action buttons. Only New Booking remains.
       $(".cancel").hide();
       $("#submitBooking").hide();
       $("#toggleEdit").text("🆕 New Booking").show();
+
+      // Keep manual service visible if it was used, but make it non-editable.
+      $("#manualService").prop("disabled", true);
     }
 
     $(document).ready(function () {
@@ -565,6 +569,11 @@
 
       // Default date = today.
       setToday();
+
+      // Initial state: clean and frozen. New Booking unlocks the form.
+      $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", true);
+      $(".country-select, .service-select").prop("disabled", true).trigger("change");
+      $("#manualService").prop("disabled", true);
 
       // Commercial Invoice calculations.
       $(document).on("input change", "#invoiceTable .qty, #invoiceTable .rate", function () {
@@ -636,11 +645,15 @@
       // 🆕 NEW BOOKING
       $toggleEdit.on("click", function () {
         if ($form.hasClass("readonly")) {
-          // Start a completely fresh booking.
+          // Remove the previous booking and start a completely fresh one.
           $form[0].reset();
+
+          $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", false);
+          $(".country-select, .service-select").prop("disabled", false);
+
           $(".country-select").val(null).trigger("change");
           $(".service-select").val(null).trigger("change");
-          $("#manualService").val("").hide();
+          $("#manualService").val("").hide().prop("disabled", false);
 
           resetInvoiceRows();
           resetWeightRows();
@@ -657,7 +670,24 @@
 
       // ❌ CANCEL BOOKING
       $(".cancel").on("click", function () {
-        clearAndFreezeBooking();
+        // Cancel means discard current entry and return to a clean frozen form.
+        $form[0].reset();
+        $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", false);
+        $(".country-select, .service-select").prop("disabled", false).val(null).trigger("change");
+        $("#manualService").val("").hide().prop("disabled", false);
+
+        resetInvoiceRows();
+        resetWeightRows();
+        setToday();
+
+        $form.addClass("readonly");
+        $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", true);
+        $(".country-select, .service-select").prop("disabled", true).trigger("change");
+        $("#manualService").prop("disabled", true);
+
+        $(".cancel").hide();
+        $("#submitBooking").hide();
+        $toggleEdit.text("🆕 New Booking").show();
       });
 
       // 📨 SUBMIT BOOKING
@@ -697,6 +727,7 @@
 
           success: function () {
             alert("✅ Booking Submitted Successfully!");
+            // Keep the submitted data visible in read-only preview mode.
             clearAndFreezeBooking();
           },
 
