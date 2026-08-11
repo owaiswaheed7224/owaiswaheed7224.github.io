@@ -889,11 +889,293 @@
       });
 
       // 🖨 PRINT / PDF
-      // Opens the browser print window. From there choose "Save as PDF"
-      // to create/open the booking as a PDF.
+      // Open a separate professional booking slip in a NEW TAB.
+      // The current booking form remains exactly as it is.
       $("#printBooking").on("click", function () {
-        window.print();
+        openBookingSlip();
       });
+
+      function escHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function fieldValue(name) {
+        const el = document.querySelector('[name="' + name + '"]');
+        return el ? el.value : "";
+      }
+
+      function getInvoiceRows() {
+        const rows = [];
+        $("#invoiceTable tbody tr").each(function () {
+          rows.push({
+            description: $(this).find(".desc").val() || "",
+            qty: $(this).find(".qty").val() || "0",
+            unit: $(this).find(".unit").val() || "",
+            rate: $(this).find(".rate").val() || "0",
+            value: $(this).find(".value").val() || "0.00"
+          });
+        });
+        return rows;
+      }
+
+      function getWeightRows() {
+        const rows = [];
+        $("#weightTable tbody tr").each(function () {
+          rows.push({
+            weight: $(this).find(".weight-input").val() || "0",
+            length: $(this).find(".length-input").val() || "0",
+            width: $(this).find(".width-input").val() || "0",
+            height: $(this).find(".height-input").val() || "0",
+            volumetric: $(this).find(".volumetric-input").val() || "0.00"
+          });
+        });
+        return rows;
+      }
+
+      function openBookingSlip() {
+        calculateInvoice();
+        calculateWeightPerforma();
+
+        const invoiceRows = getInvoiceRows();
+        const weightRows = getWeightRows();
+
+        const esc = escHtml;
+        const v = fieldValue;
+
+        const invoiceHtml = invoiceRows.map((r, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${esc(r.description)}</td>
+            <td>${esc(r.qty)}</td>
+            <td>${esc(r.unit)}</td>
+            <td>${esc(r.rate)}</td>
+            <td>${esc(r.value)}</td>
+          </tr>
+        `).join("");
+
+        const weightHtml = weightRows.map((r, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${esc(r.weight)}</td>
+            <td>${esc(r.length)}</td>
+            <td>${esc(r.width)}</td>
+            <td>${esc(r.height)}</td>
+            <td>${esc(r.volumetric)}</td>
+          </tr>
+        `).join("");
+
+        const service = v("service") || "-";
+        const type = v("type") || "-";
+        const date = v("date") || "-";
+        const awb = v("awb_number") || "-";
+        const ref = v("reference_number") || "-";
+        const totalQty = document.getElementById("totalQty")?.value || "0";
+        const totalValue = document.getElementById("totalValue")?.value || "0.00";
+        const totalWeight = v("total_weight") || "0.00";
+        const totalVol = v("total_volumetric_weight") || "0.00";
+        const payable = v("payable") || "0.00";
+        const total = v("total") || "0.00";
+        const balance = v("balance") || "0.00";
+
+        const slip = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shipment Booking Slip - ${esc(awb)}</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e9edf3;font-family:Arial,Helvetica,sans-serif;color:#14213d}
+.toolbar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #d8dde5;padding:10px 18px;text-align:right}
+.toolbar button{background:#0b1f3a;color:#fff;border:0;border-radius:5px;padding:10px 18px;font-weight:700;cursor:pointer}
+.page{width:210mm;min-height:297mm;margin:18px auto;background:#fff;padding:10mm 9mm 8mm;box-shadow:0 4px 20px rgba(0,0,0,.16)}
+.header{display:grid;grid-template-columns:31% 37% 32%;gap:10px;align-items:start;border-bottom:3px solid #f5c400;padding-bottom:8px}
+.brand{font-size:25px;font-weight:900;letter-spacing:.5px;color:#12284b;line-height:1}
+.brand span{display:block;font-size:13px;letter-spacing:1.2px;margin-top:5px}
+.tag{font-size:9px;margin-top:7px;letter-spacing:1px;font-weight:700}
+.title h1{font-size:20px;margin:3px 0 8px;color:#12284b;letter-spacing:.5px}
+.contact{font-size:8.5px;line-height:1.65;color:#27364d}
+.partners{text-align:right;font-size:18px;font-weight:900}
+.dhl{display:inline-block;background:#ffcf00;color:#d40511;padding:2px 7px;font-style:italic;margin-right:5px}
+.fedex{display:inline-block;color:#4d148c}
+.bookbox{margin-top:8px;border:1px solid #bcc5d0;border-radius:6px;padding:7px;font-size:9px}
+.bookbox div{display:grid;grid-template-columns:88px 10px 1fr;margin:3px 0}
+.bookbox .awb{font-size:14px;font-weight:900;color:#c5222b}
+.section-title{background:#0d2343;color:#fff;font-size:11px;font-weight:800;padding:6px 9px;margin-top:10px;border-radius:5px 5px 0 0;letter-spacing:.2px}
+.details{display:grid;grid-template-columns:1fr 1fr;border:1px solid #b9c1cb;border-top:0}
+.detail{padding:5px 8px;border-right:1px solid #cbd1d8;border-bottom:1px solid #cbd1d8;min-height:28px}
+.detail:nth-child(even){border-right:0}
+.label{font-size:7.5px;color:#536174;font-weight:700;text-transform:uppercase}
+.val{font-size:9.2px;color:#1e2b40;margin-top:2px;min-height:12px;white-space:pre-wrap}
+table{width:100%;border-collapse:collapse;font-size:8.7px}
+th,td{border:1px solid #b9c1cb;padding:5px 6px}
+th{background:#f5c400;color:#111;font-weight:800}
+.service th{background:#0d2343;color:#fff}
+.invoice th{background:#f5c400}
+tfoot th{background:#fff;text-align:right}
+.weight-charge{display:grid;grid-template-columns:1.08fr .92fr;gap:8px}
+.weightbox,.chargebox{border:1px solid #b9c1cb}
+.weightbox .mini-title,.chargebox .mini-title{background:#0d2343;color:#fff;padding:6px 8px;font-size:10px;font-weight:800}
+.mini-table th{background:#f5c400}
+.total-charge{background:#f5c400;font-size:11px;font-weight:900;text-align:center;padding:7px}
+.summary{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid #b9c1cb;margin-top:9px}
+.summary-item{padding:8px;text-align:center;border-right:1px solid #cbd1d8}
+.summary-item:last-child{border-right:0}
+.summary .label{font-size:7px}
+.summary .num{font-size:13px;font-weight:900;margin-top:4px}
+.summary .red{color:#c5222b}
+.bottom{display:grid;grid-template-columns:1.08fr .92fr;gap:8px;margin-top:10px}
+.box{border:1px solid #b9c1cb;border-radius:5px;padding:8px;min-height:105px}
+.box h3{margin:0 0 6px;font-size:10px;color:#12284b}
+.box ul{margin:0;padding-left:15px;font-size:8px;line-height:1.65}
+.signature{text-align:center;font-size:9px;padding-top:25px}
+.signature-line{border-bottom:1px solid #26384f;width:70%;margin:0 auto 4px}
+.stamp{margin:9px auto 0;border:2px solid #164e86;border-radius:50%;width:62px;height:62px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:7px;font-weight:800;color:#164e86;transform:rotate(-8deg)}
+.footer{text-align:center;border-top:2px solid #f5c400;margin-top:9px;padding-top:6px;font-size:10px;font-style:italic;font-weight:700;color:#26384f}
+@media print{
+ body{background:#fff}
+ .toolbar{display:none}
+ .page{margin:0;box-shadow:none;width:210mm;min-height:297mm}
+ @page{size:A4;margin:0}
+}
+</style>
+</head>
+<body>
+<div class="toolbar"><button onclick="window.print()">🖨 Print / Save as PDF</button></div>
+<div class="page">
+
+  <div class="header">
+    <div>
+      <div class="brand">ARHAM<span>FREIGHT LOGISTICS</span></div>
+      <div class="tag">FAST • RELIABLE • WORLDWIDE</div>
+    </div>
+    <div class="title">
+      <h1>SHIPMENT BOOKING SLIP</h1>
+      <div class="contact">
+        📍 Office # 123, 1st Floor, Main Korangi Road, Karachi, Pakistan<br>
+        ☎ +92 300 1234567 &nbsp; | &nbsp; +92 21 34567890<br>
+        ✉ info@arhamfreight.com &nbsp; | &nbsp; 🌐 www.arhamfreight.com
+      </div>
+    </div>
+    <div>
+      <div class="partners"><span class="dhl">DHL</span> | <span class="fedex">FedEx</span></div>
+      <div class="bookbox">
+        <div><b>Booking Date</b><span>:</span><span>${esc(date)}</span></div>
+        <div><b>AWB Number</b><span>:</span><span class="awb">${esc(awb)}</span></div>
+        <div><b>Reference No</b><span>:</span><span>${esc(ref)}</span></div>
+        <div><b>Booking By</b><span>:</span><span>Admin</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">👤 SHIPPER DETAILS</div>
+  <div class="details">
+    <div class="detail"><div class="label">Company Name</div><div class="val">${esc(v("shipper_company"))}</div></div>
+    <div class="detail"><div class="label">Contact Person</div><div class="val">${esc(v("shipper_name"))}</div></div>
+    <div class="detail"><div class="label">Phone / Mobile</div><div class="val">${esc(v("shipper_contact"))}</div></div>
+    <div class="detail"><div class="label">City / Country</div><div class="val">${esc(v("ship_city"))} / ${esc(v("ship_country"))}</div></div>
+    <div class="detail"><div class="label">Address</div><div class="val">${esc(v("ship_address1"))}${v("ship_address2") ? " | " + esc(v("ship_address2")) : ""}</div></div>
+    <div class="detail"><div class="label">NTN / NIC</div><div class="val">${esc(v("ship_ntn"))} / ${esc(v("ship_nic"))}</div></div>
+  </div>
+
+  <div class="section-title">👤 RECEIVER DETAILS</div>
+  <div class="details">
+    <div class="detail"><div class="label">Company Name</div><div class="val">${esc(v("receiver_company"))}</div></div>
+    <div class="detail"><div class="label">Contact Person</div><div class="val">${esc(v("receiver_attention"))}</div></div>
+    <div class="detail"><div class="label">Phone / Mobile</div><div class="val">${esc(v("receiver_contact"))}</div></div>
+    <div class="detail"><div class="label">ZIP / City / Country</div><div class="val">${esc(v("receiver_zip"))} / ${esc(v("receiver_city"))} / ${esc(v("receiver_country"))}</div></div>
+    <div class="detail" style="grid-column:1/-1;border-right:0"><div class="label">Address</div><div class="val">${esc(v("receiver_address1"))}${v("receiver_address2") ? " | " + esc(v("receiver_address2")) : ""}</div></div>
+  </div>
+
+  <div class="section-title">📦 SERVICE DETAILS</div>
+  <table class="service">
+    <tr>
+      <th>Service Type</th><td>${esc(service)}</td>
+      <th>Shipment Type</th><td>${esc(type)}</td>
+      <th>Payment Terms</th><td>Shipper</td>
+      <th>No. of Pieces</th><td>${esc(totalQty)}</td>
+    </tr>
+  </table>
+
+  <div class="section-title">🧾 COMMERCIAL INVOICE</div>
+  <table class="invoice">
+    <thead><tr><th>#</th><th>Description of Goods</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total Value</th></tr></thead>
+    <tbody>${invoiceHtml}</tbody>
+    <tfoot><tr><th colspan="2">TOTAL</th><th>${esc(totalQty)}</th><th></th><th></th><th>USD ${esc(totalValue)}</th></tr></tfoot>
+  </table>
+
+  <div class="weight-charge">
+    <div class="weightbox">
+      <div class="mini-title">⚖ WEIGHT &amp; DIMENSION</div>
+      <table class="mini-table">
+        <tr><th>Actual Weight</th><td>${esc(totalWeight)} KG</td></tr>
+        <tr><th>Volumetric Weight</th><td>${esc(totalVol)} KG</td></tr>
+        <tr><th>Chargeable Weight</th><td>${esc(Math.max(parseFloat(totalWeight)||0, parseFloat(totalVol)||0).toFixed(2))} KG</td></tr>
+        ${weightHtml || '<tr><td colspan="2">No dimensions entered</td></tr>'}
+      </table>
+      <div style="padding:5px;font-size:7.5px;color:#c5222b;font-weight:700">* Volumetric Weight = (L × W × H) / 5000</div>
+    </div>
+
+    <div class="chargebox">
+      <div class="mini-title">💳 CHARGES SUMMARY</div>
+      <table class="mini-table">
+        <tr><th>Description</th><th>Amount</th></tr>
+        <tr><td>Payable</td><td>${esc(payable)}</td></tr>
+        <tr><td>Total Charges</td><td>${esc(total)}</td></tr>
+        <tr><td>Other / Balance</td><td>${esc(balance)}</td></tr>
+      </table>
+      <div class="total-charge">PAYABLE / TOTAL: ${esc(total)}</div>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="summary-item"><div class="label">TOTAL INVOICE VALUE</div><div class="num">USD ${esc(totalValue)}</div></div>
+    <div class="summary-item"><div class="label">TOTAL CHARGES</div><div class="num">USD ${esc(total)}</div></div>
+    <div class="summary-item"><div class="label">BALANCE TO COLLECT</div><div class="num red">USD ${esc(balance)}</div></div>
+  </div>
+
+  <div class="bottom">
+    <div class="box">
+      <h3>TERMS &amp; CONDITIONS</h3>
+      <ul>
+        <li>Shipment will be booked upon receipt of complete and correct information.</li>
+        <li>Company is not responsible for delays due to customs clearance.</li>
+        <li>Insurance is subject to the declared value of goods.</li>
+        <li>Claims are subject to company terms and conditions.</li>
+        <li>All disputes are subject to Karachi jurisdiction.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>AUTHORIZED SIGNATURE</h3>
+      <div class="signature">
+        <div style="font-size:28px;font-family:cursive">Arham</div>
+        <div class="signature-line"></div>
+        Authorized Signature
+        <div class="stamp">ARHAM FREIGHT<br>LOGISTICS<br><br>KARACHI</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Thank you for choosing Arham Freight Logistics!</div>
+</div>
+</body>
+</html>`;
+
+        const slipWindow = window.open("", "_blank");
+        if (!slipWindow) {
+          alert("Please allow pop-ups for this website to open the booking slip.");
+          return;
+        }
+        slipWindow.document.open();
+        slipWindow.document.write(slip);
+        slipWindow.document.close();
+        slipWindow.focus();
+      }
 
       // Initial calculations.
       calculateInvoice();
