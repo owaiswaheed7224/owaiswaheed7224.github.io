@@ -339,16 +339,53 @@
         </div>
       </div>
 
+      <!-- Weight Performa -->
+      <div class="section">
+        <h3>Weight Performa</h3>
+        <table class="table table-bordered text-center align-middle" id="weightTable">
+          <thead class="table-secondary">
+            <tr>
+              <th>Weight</th>
+              <th>Length</th>
+              <th>Width</th>
+              <th>Height</th>
+              <th>Volumetric Weight</th>
+              <th>❌</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="number" min="0" step="0.01" class="form-control weight-input" name="weight[]" value="0"></td>
+              <td><input type="number" min="0" step="0.01" class="form-control length-input" name="length[]" value="0"></td>
+              <td><input type="number" min="0" step="0.01" class="form-control width-input" name="width[]" value="0"></td>
+              <td><input type="number" min="0" step="0.01" class="form-control height-input" name="height[]" value="0"></td>
+              <td><input type="number" step="0.01" class="form-control volumetric-input" name="volumetric_weight[]" value="0.00" readonly></td>
+              <td><button type="button" class="btn btn-danger btn-sm deleteWeightRow">🗑</button></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="text-start">
+                <button type="button" class="btn btn-primary btn-sm" id="addWeightRow">➕ Add</button>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="row g-2 mt-1">
+          <div class="col-md-6">
+            <label>Total Weight</label>
+            <input type="number" step="0.01" class="form-control" id="totalWeight" name="total_weight" readonly>
+          </div>
+          <div class="col-md-6">
+            <label>Total Volumetric Weight</label>
+            <input type="number" step="0.01" class="form-control" id="totalVolumetricWeight" name="total_volumetric_weight" readonly>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charges -->
       <div class="section">
         <h3>Charges</h3>
-        <label>Pieces</label>
-        <input type="number" name="pieces">
-        <label>Weight</label>
-        <input type="number" step="0.01" name="weight">
-        <label>Charge Weight</label>
-        <input type="number" step="0.01" name="chrg_weight">
-        <label>Dim Weight</label>
-        <input type="number" step="0.01" name="dim_weight">
         <label>Payable</label>
         <input type="number" step="0.01" name="payable">
         <label>Total</label>
@@ -358,8 +395,8 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" class="cancel" onclick="document.getElementById('bookingForm').reset();">Cancel Booking</button>
-        <button type="submit">Submit Booking</button>
+        <button type="button" class="cancel" style="display:none;">Cancel Booking</button>
+        <button type="submit" id="submitBooking" style="display:none;">Submit Booking</button>
         <button type="button" id="toggleEdit" class="btn btn-success">🆕 New Booking</button>
       </div>
     </form>
@@ -396,18 +433,38 @@
       $("#invoiceTable tbody tr").each(function () {
         const qty = parseFloat($(this).find(".qty").val()) || 0;
         const rate = parseFloat($(this).find(".rate").val()) || 0;
-
-        // Value = Qty × Rate
         const value = qty * rate;
 
         $(this).find(".value").val(value.toFixed(2));
-
         totalQty += qty;
         totalValue += value;
       });
 
       $("#totalQty").val(totalQty);
       $("#totalValue").val(totalValue.toFixed(2));
+    }
+
+    function calculateWeightPerforma() {
+      let totalWeight = 0;
+      let totalVolumetricWeight = 0;
+
+      $("#weightTable tbody tr").each(function () {
+        const weight = parseFloat($(this).find(".weight-input").val()) || 0;
+        const length = parseFloat($(this).find(".length-input").val()) || 0;
+        const width = parseFloat($(this).find(".width-input").val()) || 0;
+        const height = parseFloat($(this).find(".height-input").val()) || 0;
+
+        // Volumetric Weight = Length × Width × Height ÷ 5000
+        const volumetricWeight = (length * width * height) / 5000;
+
+        $(this).find(".volumetric-input").val(volumetricWeight.toFixed(2));
+
+        totalWeight += weight;
+        totalVolumetricWeight += volumetricWeight;
+      });
+
+      $("#totalWeight").val(totalWeight.toFixed(2));
+      $("#totalVolumetricWeight").val(totalVolumetricWeight.toFixed(2));
     }
 
     function addInvoiceRow() {
@@ -425,9 +482,7 @@
     }
 
     function resetInvoiceRows() {
-      const $tbody = $("#invoiceTable tbody");
-
-      $tbody.html(`
+      $("#invoiceTable tbody").html(`
         <tr>
           <td><textarea class="form-control desc" name="description[]"></textarea></td>
           <td><input type="number" min="0" class="form-control qty" name="qty[]" value="0"></td>
@@ -436,32 +491,51 @@
           <td><input type="number" step="0.01" class="form-control value" name="value[]" value="0.00" readonly></td>
           <td><button type="button" class="btn btn-danger btn-sm deleteRow">🗑</button></td>
         </tr>`);
-
       calculateInvoice();
+    }
+
+    function addWeightRow() {
+      $("#weightTable tbody").append(`
+        <tr>
+          <td><input type="number" min="0" step="0.01" class="form-control weight-input" name="weight[]" value="0"></td>
+          <td><input type="number" min="0" step="0.01" class="form-control length-input" name="length[]" value="0"></td>
+          <td><input type="number" min="0" step="0.01" class="form-control width-input" name="width[]" value="0"></td>
+          <td><input type="number" min="0" step="0.01" class="form-control height-input" name="height[]" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control volumetric-input" name="volumetric_weight[]" value="0.00" readonly></td>
+          <td><button type="button" class="btn btn-danger btn-sm deleteWeightRow">🗑</button></td>
+        </tr>`);
+      calculateWeightPerforma();
+    }
+
+    function resetWeightRows() {
+      $("#weightTable tbody").html(`
+        <tr>
+          <td><input type="number" min="0" step="0.01" class="form-control weight-input" name="weight[]" value="0"></td>
+          <td><input type="number" min="0" step="0.01" class="form-control length-input" name="length[]" value="0"></td>
+          <td><input type="number" min="0" step="0.01" class="form-control width-input" name="width[]" value="0"></td>
+          <td><input type="number" min="0" step="0.01" class="form-control height-input" name="height[]" value="0"></td>
+          <td><input type="number" step="0.01" class="form-control volumetric-input" name="volumetric_weight[]" value="0.00" readonly></td>
+          <td><button type="button" class="btn btn-danger btn-sm deleteWeightRow">🗑</button></td>
+        </tr>`);
+      calculateWeightPerforma();
     }
 
     function clearAndFreezeBooking() {
       const form = $("#bookingForm")[0];
 
-      // Native reset first.
       form.reset();
-
-      // Clear Select2 controls.
       $(".country-select, .service-select").val(null).trigger("change");
-
-      // Clear manual service field.
       $("#manualService").val("").hide();
 
-      // Rebuild invoice as one clean row.
       resetInvoiceRows();
-
-      // Keep today's date as the default date.
+      resetWeightRows();
       setToday();
 
-      // Freeze the form again.
       $("#bookingForm").addClass("readonly");
 
-      // Show New Booking button again.
+      // Only New Booking is visible in the frozen state.
+      $(".cancel").hide();
+      $("#submitBooking").hide();
       $("#toggleEdit").text("🆕 New Booking").show();
     }
 
@@ -492,14 +566,24 @@
       // Default date = today.
       setToday();
 
-      // Invoice calculations: Qty × Rate = Value, plus totals.
+      // Commercial Invoice calculations.
       $(document).on("input change", "#invoiceTable .qty, #invoiceTable .rate", function () {
         calculateInvoice();
       });
 
-      // Add invoice row.
+      // Weight Performa calculations.
+      $(document).on("input change", "#weightTable .weight-input, #weightTable .length-input, #weightTable .width-input, #weightTable .height-input", function () {
+        calculateWeightPerforma();
+      });
+
+      // Add Commercial Invoice row.
       $("#addRow").on("click", function () {
         addInvoiceRow();
+      });
+
+      // Add Weight Performa row.
+      $("#addWeightRow").on("click", function () {
+        addWeightRow();
       });
 
       // Delete invoice row. Keep at least one row.
@@ -525,6 +609,19 @@
         calculateInvoice();
       });
 
+      // Delete Weight Performa row. Keep at least one row.
+      $(document).on("click", ".deleteWeightRow", function () {
+        const rowCount = $("#weightTable tbody tr").length;
+
+        if (rowCount > 1) {
+          $(this).closest("tr").remove();
+        } else {
+          $(this).closest("tr").find("input").val("0");
+        }
+
+        calculateWeightPerforma();
+      });
+
       // Manual/custom service.
       $(".service-select").on("change", function () {
         const selected = $(this).val();
@@ -546,10 +643,15 @@
           $("#manualService").val("").hide();
 
           resetInvoiceRows();
+          resetWeightRows();
           setToday();
 
           $form.removeClass("readonly");
+
+          // Show Cancel + Submit only after New Booking is clicked.
           $toggleEdit.hide();
+          $(".cancel").show();
+          $("#submitBooking").show();
         }
       });
 
@@ -586,6 +688,7 @@
         }
 
         calculateInvoice();
+        calculateWeightPerforma();
 
         $.ajax({
           url: $form.attr("action"),
@@ -603,8 +706,9 @@
         });
       });
 
-      // Initial invoice calculation.
+      // Initial calculations.
       calculateInvoice();
+      calculateWeightPerforma();
     });
   </script>
 
