@@ -766,7 +766,10 @@
         } else {
           bookingEditMode = false;
           clearAndFreezeBooking();
-          $("#toggleEdit").text("✏️ Edit Booking").show();
+
+          // View/Preview mode: keep the shipment read-only.
+          // Do not show the Edit button at the bottom.
+          $("#toggleEdit").hide();
           $("#printBooking").show();
         }
       } catch (err) {
