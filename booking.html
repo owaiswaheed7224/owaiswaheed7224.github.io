@@ -359,6 +359,8 @@
             <input type="date" name="date" required>
             <label>AWB Number</label>
             <input type="text" name="awb_number" required>
+            <label>Tracking Number</label>
+            <input type="text" name="tracking_number">
             <label>Reference Number</label>
             <input type="text" name="reference_number">
             <label>Shipper Company</label>
@@ -675,6 +677,103 @@
       $("#manualService").prop("disabled", true);
     }
 
+    let bookingEditMode = false;
+    let bookingRowNumber = "";
+
+    function setBookingFormEditable(editing) {
+      const $form = $("#bookingForm");
+      if (editing) {
+        $form.removeClass("readonly");
+        $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", false);
+        $(".country-select, .service-select").prop("disabled", false).trigger("change");
+        $("#manualService").prop("disabled", false);
+        $(".cancel").show();
+        $("#submitBooking").show().text("💾 Update Booking");
+        $("#printBooking").show();
+        $("#toggleEdit").hide();
+      } else {
+        clearAndFreezeBooking();
+      }
+    }
+
+    function setField(name, value) {
+      const el = document.querySelector('[name="' + name + '"]');
+      if (!el) return;
+      const val = value == null ? "" : String(value);
+      if (el.type === "date") {
+        el.value = val.substring(0, 10);
+      } else {
+        el.value = val;
+      }
+    }
+
+    function populateBookingFromRecord(record) {
+      if (!record) return;
+      const names = [
+        "date","awb_number","tracking_number","reference_number","shipper_company","shipper_name",
+        "shipper_contact","ship_address1","ship_address2","ship_city","ship_country","ship_ntn","ship_nic",
+        "service","type","receiver_company","receiver_attention","receiver_contact","receiver_address1",
+        "receiver_address2","receiver_zip","receiver_city","receiver_country","pieces","weight","chrg_weight",
+        "dim_weight","payable","total","balance"
+      ];
+      names.forEach(n => setField(n, record[n]));
+
+      // Select2 fields need their own value assignment.
+      if (record.ship_country !== undefined) $("[name=ship_country]").val(record.ship_country || "").trigger("change");
+      if (record.receiver_country !== undefined) $("[name=receiver_country]").val(record.receiver_country || "").trigger("change");
+      if (record.service !== undefined) {
+        const service = String(record.service || "");
+        const $s = $("[name=service]");
+        if (service && $s.find('option[value="' + service.replace(/"/g, '\\"') + '"]').length === 0) {
+          $s.append(new Option(service, service, true, true));
+        }
+        $s.val(service).trigger("change");
+      }
+
+      // Rebuild invoice/weight rows from the values returned by the sheet.
+      resetInvoiceRows();
+      const desc = String(record.description || "").split(" | ");
+      const qty = String(record.qty || "").split(" | ");
+      const unit = String(record.unit || "").split(" | ");
+      const rate = String(record.rate || "").split(" | ");
+      const val = String(record.value || "").split(" | ");
+      const count = Math.max(desc.length, qty.length, unit.length, rate.length, val.length);
+      for (let i = 0; i < count; i++) {
+        if (i > 0) addInvoiceRow();
+        const row = $("#invoiceTable tbody tr").eq(i);
+        row.find(".desc").val(desc[i] || "");
+        row.find(".qty").val(qty[i] || "0");
+        row.find(".unit").val(unit[i] || "pcs");
+        row.find(".rate").val(rate[i] || "0");
+        row.find(".value").val(val[i] || "0.00");
+      }
+      calculateInvoice();
+      calculateWeightPerforma();
+    }
+
+    function loadShipmentFromSearching() {
+      const raw = sessionStorage.getItem("selectedShipment");
+      const mode = sessionStorage.getItem("bookingOpenMode");
+      if (!raw || !mode) return;
+      try {
+        const record = JSON.parse(raw);
+        bookingRowNumber = record._rowNumber || sessionStorage.getItem("bookingRowNumber") || "";
+        populateBookingFromRecord(record);
+        if (mode === "edit") {
+          bookingEditMode = true;
+          setBookingFormEditable(true);
+          $("#toggleEdit").text("✏️ Editing Shipment");
+        } else {
+          bookingEditMode = false;
+          clearAndFreezeBooking();
+          $("#toggleEdit").text("✏️ Edit Booking").show();
+          $("#printBooking").show();
+        }
+      } catch (err) {
+        console.error("Unable to load selected shipment", err);
+      }
+    }
+
     $(document).ready(function () {
       // Populate countries.
       $(".country-select").each(function () {
@@ -868,11 +967,16 @@
         $.ajax({
           url: $form.attr("action"),
           method: "POST",
-          data: $form.serialize(),
+          data: $form.serialize() +
+            (bookingEditMode ? "&action=update&rowNumber=" + encodeURIComponent(bookingRowNumber) : "&action=booking"),
 
           success: function () {
-            // Keep the submitted data visible in read-only preview mode.
+            // Keep the submitted/updated data visible in read-only preview mode.
+            bookingEditMode = false;
             clearAndFreezeBooking();
+            sessionStorage.removeItem("selectedShipment");
+            sessionStorage.removeItem("bookingOpenMode");
+            sessionStorage.removeItem("bookingRowNumber");
 
             // Hide spinner and show Print / PDF button beside the heading.
             $loading.hide();
@@ -1192,6 +1296,9 @@ td,th{border:1px solid #333;padding:3px 4px;font-size:7.5px;vertical-align:top}
       // Initial calculations.
       calculateInvoice();
       calculateWeightPerforma();
+
+      // If Searching Booking opened this page, load the selected shipment.
+      loadShipmentFromSearching();
     });
   </script>
 
