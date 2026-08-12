@@ -169,6 +169,23 @@
       border-bottom: 1px solid #eee;
     }
 
+    .action-btn {
+      min-width: 36px;
+      height: 34px;
+      padding: 3px 8px;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .tracking-number {
+      font-weight: 700;
+      color: #198754;
+    }
+
     .loading {
       display: none;
     }
@@ -290,6 +307,7 @@
               <tr>
                 <th>Date</th>
                 <th>AWB / Booking No.</th>
+                <th>Tracking Number</th>
                 <th>Shipper</th>
                 <th>Receiver</th>
                 <th>Origin</th>
@@ -298,11 +316,12 @@
                 <th>Pieces</th>
                 <th>Weight</th>
                 <th>Total</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="resultsBody">
               <tr>
-                <td colspan="10" class="text-center py-4 text-muted">
+                <td colspan="12" class="text-center py-4 text-muted">
                   Loading bookings...
                 </td>
               </tr>
@@ -310,6 +329,11 @@
           </table>
         </div>
       </div>
+    </div>
+
+    <div class="alert alert-info mt-3 mb-0">
+      <strong>Actions:</strong> 👁 View shipment preview, ✏️ Edit shipment, 🖨️ Print shipment.
+      View/Edit selected shipment ko <strong>booking.html</strong> par open karte hain.
     </div>
 
     <!-- Full Details -->
@@ -399,7 +423,7 @@
     function setLoading() {
       resultsBody.innerHTML = `
         <tr>
-          <td colspan="10" class="text-center py-4">
+          <td colspan="12" class="text-center py-4">
             <div class="spinner-border text-primary me-2"></div>
             Searching...
           </td>
@@ -411,6 +435,73 @@
       return escapeHtml(value);
     }
 
+    function openBooking(record, mode) {
+      if (!record) return;
+
+      // Keep the complete Google Sheet record available to booking.html.
+      sessionStorage.setItem("selectedShipment", JSON.stringify(record));
+      sessionStorage.setItem("bookingOpenMode", mode);
+
+      window.location.href = "booking.html?mode=" + encodeURIComponent(mode);
+    }
+
+    window.viewBooking = function(index) {
+      const record = window.currentRecords?.[index];
+      if (!record) return;
+      openBooking(record, "view");
+    };
+
+    window.editBooking = function(index) {
+      const record = window.currentRecords?.[index];
+      if (!record) return;
+      openBooking(record, "edit");
+    };
+
+    window.printBooking = function(index) {
+      const record = window.currentRecords?.[index];
+      if (!record) return;
+
+      const printableFields = fields.map(([label, key]) => {
+        const value = record[key] ?? "";
+        return `<tr><td><strong>${escapeHtml(label)}</strong></td><td>${formatValue(value)}</td></tr>`;
+      }).join("");
+
+      const printWindow = window.open("", "_blank", "width=900,height=700");
+      if (!printWindow) {
+        alert("Popup blocked hai. Browser mai popups allow kar dein.");
+        return;
+      }
+
+      printWindow.document.write(`
+        <!doctype html>
+        <html>
+        <head>
+          <title>Shipment ${escapeHtml(record.awb_number || "")}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 30px; color: #222; }
+            h2 { margin-bottom: 4px; }
+            .sub { color:#666; margin-bottom:20px; }
+            table { width:100%; border-collapse:collapse; }
+            td { border:1px solid #ddd; padding:9px; vertical-align:top; }
+            td:first-child { width:30%; background:#f5f7fa; }
+            @media print { body { padding:10px; } }
+          </style>
+        </head>
+        <body>
+          <h2>Arham Freight Logistics</h2>
+          <div class="sub">Shipment Booking Details</div>
+          <table>${printableFields}</table>
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    };
+
     function renderResults(records, title) {
       resultsTitle.textContent = title;
       detailsCard.style.display = "none";
@@ -419,7 +510,7 @@
       if (!records || records.length === 0) {
         resultsBody.innerHTML = `
           <tr>
-            <td colspan="10" class="text-center py-4 text-danger fw-bold">
+            <td colspan="12" class="text-center py-4 text-danger fw-bold">
               ❌ Booking not found / No records found
             </td>
           </tr>`;
@@ -427,19 +518,50 @@
       }
 
       resultsBody.innerHTML = records.map((r, index) => `
-        <tr onclick="showDetails(${index})">
-          <td>${formatValue(r.date)}</td>
-          <td class="fw-bold text-primary">${formatValue(r.awb_number)}</td>
-          <td>${formatValue(r.shipper_name || r.shipper_company)}</td>
-          <td>${formatValue(r.receiver_attention || r.receiver_company)}</td>
-          <td>${formatValue(r.ship_city)}</td>
-          <td>${formatValue(r.receiver_city)}</td>
-          <td>${formatValue(r.service)}</td>
-          <td>${formatValue(r.pieces)}</td>
-          <td>${formatValue(r.weight)}</td>
-          <td>${formatValue(r.total)}</td>
+        <tr>
+          <td onclick="showDetails(${index})">${formatValue(r.date)}</td>
+          <td onclick="showDetails(${index})" class="fw-bold text-primary">${formatValue(r.awb_number)}</td>
+          <td onclick="showDetails(${index})" class="fw-bold text-success">${formatValue(r.tracking_number)}</td>
+          <td onclick="showDetails(${index})">${formatValue(r.shipper_name || r.shipper_company)}</td>
+          <td onclick="showDetails(${index})">${formatValue(r.receiver_attention || r.receiver_company)}</td>
+          <td onclick="showDetails(${index})">${formatValue(r.ship_city)}</td>
+          <td onclick="showDetails(${index})">${formatValue(r.receiver_city)}</td>
+          <td onclick="showDetails(${index})">${formatValue(r.service)}</td>
+          <td onclick="showDetails(${index})">${formatValue(r.pieces)}</td>
+          <td onclick="showDetails(${index})">${formatValue(r.weight)}</td>
+          <td onclick="showDetails(${index})">${formatValue(r.total)}</td>
+          <td>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-sm btn-outline-primary action-btn"
+                      onclick="event.stopPropagation(); viewBooking(${index})"
+                      title="View Shipment">
+                👁
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-warning action-btn"
+                      onclick="event.stopPropagation(); editBooking(${index})"
+                      title="Edit Shipment">
+                ✏️
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-dark action-btn"
+                      onclick="event.stopPropagation(); printBooking(${index})"
+                      title="Print Shipment">
+                🖨️
+              </button>
+            </div>
+          </td>
         </tr>
       `).join("");
+
+      // Normalize tracking number from a few possible sheet/API field names.
+      records.forEach(r => {
+        if (r.tracking_number === undefined || r.tracking_number === null) {
+          r.tracking_number =
+            r.tracking ||
+            r.tracking_no ||
+            r.tracking_number_value ||
+            "";
+        }
+      });
 
       window.currentRecords = records;
     }
@@ -515,7 +637,7 @@
         console.error(error);
         resultsBody.innerHTML = `
           <tr>
-            <td colspan="10" class="text-center py-4 text-danger fw-bold">
+            <td colspan="12" class="text-center py-4 text-danger fw-bold">
               ❌ Unable to connect with Google Sheet.
             </td>
           </tr>`;
