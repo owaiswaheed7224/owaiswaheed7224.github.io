@@ -181,6 +181,109 @@
       transform: translateY(-1px);
     }
 
+    /* Row selection */
+    .select-col {
+      width: 44px;
+      min-width: 44px;
+      text-align: center;
+    }
+
+    .row-check,
+    #selectAll {
+      width: 17px;
+      height: 17px;
+      cursor: pointer;
+      accent-color: #0d6efd;
+    }
+
+    .selected-row {
+      background: #eef5ff !important;
+    }
+
+    .voided-row {
+      opacity: 0.65;
+    }
+
+    .void-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: #dc3545;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Void confirmation modal */
+    .void-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    .void-modal-backdrop.show {
+      display: flex;
+    }
+
+    .void-modal {
+      width: min(430px, 100%);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.25);
+      overflow: hidden;
+    }
+
+    .void-modal-header {
+      background: #dc3545;
+      color: #fff;
+      padding: 14px 18px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .void-modal-body {
+      padding: 20px 18px;
+      color: #333;
+    }
+
+    .void-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 0 18px 18px;
+    }
+
+    .void-modal-actions button {
+      margin-left: 0;
+      min-height: 40px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .void-cancel-btn {
+      background: #6c757d;
+      color: #fff;
+    }
+
+    .void-confirm-btn {
+      background: #dc3545;
+      color: #fff;
+    }
+
+    .void-confirm-btn:disabled {
+      opacity: .65;
+      cursor: not-allowed;
+    }
+
     .tracking-number {
       font-weight: 700;
       color: #198754;
@@ -305,6 +408,9 @@
           <table class="table table-bordered table-hover mb-0" id="resultsTable">
             <thead>
               <tr>
+                <th class="select-col">
+                  <input type="checkbox" id="selectAll" title="Select all shipments">
+                </th>
                 <th>Date</th>
                 <th>AWB / Booking No.</th>
                 <th>Tracking Number</th>
@@ -321,7 +427,7 @@
             </thead>
             <tbody id="resultsBody">
               <tr>
-                <td colspan="12" class="text-center py-4 text-muted">
+                <td colspan="13" class="text-center py-4 text-muted">
                   Loading bookings...
                 </td>
               </tr>
@@ -339,6 +445,23 @@
       </div>
     </div>
   </main>
+
+  <!-- Void Confirmation Modal -->
+  <div class="void-modal-backdrop" id="voidModal" role="dialog" aria-modal="true"
+       aria-labelledby="voidModalTitle">
+    <div class="void-modal">
+      <div class="void-modal-header" id="voidModalTitle">⚠️ Void Shipment</div>
+      <div class="void-modal-body">
+        <div id="voidModalMessage">
+          Kya aap is shipment ko void karna chahtay hain?
+        </div>
+      </div>
+      <div class="void-modal-actions">
+        <button type="button" class="void-cancel-btn" id="voidCancelBtn">Cancel</button>
+        <button type="button" class="void-confirm-btn" id="voidConfirmBtn">Yes, Void Shipment</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -395,6 +518,13 @@
     const statusBox = document.getElementById("statusBox");
     const detailsCard = document.getElementById("detailsCard");
     const detailsBody = document.getElementById("detailsBody");
+    const selectAll = document.getElementById("selectAll");
+    const voidModal = document.getElementById("voidModal");
+    const voidModalMessage = document.getElementById("voidModalMessage");
+    const voidCancelBtn = document.getElementById("voidCancelBtn");
+    const voidConfirmBtn = document.getElementById("voidConfirmBtn");
+
+    let pendingVoidIndex = null;
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -416,9 +546,11 @@
     }
 
     function setLoading() {
+      selectAll.checked = false;
+      selectAll.indeterminate = false;
       resultsBody.innerHTML = `
         <tr>
-          <td colspan="12" class="text-center py-4">
+          <td colspan="13" class="text-center py-4">
             <div class="spinner-border text-primary me-2"></div>
             Searching...
           </td>
@@ -497,6 +629,141 @@
       printWindow.document.close();
     };
 
+    function getRecordIdentifier(record) {
+      return String(
+        record?._rowNumber ||
+        record?.rowNumber ||
+        record?.awb_number ||
+        record?.awb ||
+        ""
+      ).trim();
+    }
+
+    function isRecordVoided(record) {
+      const status = String(
+        record?.status ??
+        record?.shipment_status ??
+        record?.booking_status ??
+        ""
+      ).trim().toLowerCase();
+
+      return status === "void" || status === "voided";
+    }
+
+    function openVoidModal(index) {
+      const record = window.currentRecords?.[index];
+      if (!record) return;
+
+      if (isRecordVoided(record)) {
+        showStatus("Ye shipment pehle hi void ho chuki hai.", "warning");
+        return;
+      }
+
+      pendingVoidIndex = index;
+      const awb = record.awb_number || record.awb || "this shipment";
+
+      voidModalMessage.innerHTML =
+        `Kya aap shipment <strong>${escapeHtml(awb)}</strong> ko void karna chahtay hain?` +
+        `<br><span class="text-muted small">Yes par click karne ke baad shipment ko Google Sheet mein void status dene ki request bheji jayegi.</span>`;
+
+      voidConfirmBtn.disabled = false;
+      voidConfirmBtn.textContent = "Yes, Void Shipment";
+      voidModal.classList.add("show");
+    }
+
+    function closeVoidModal() {
+      pendingVoidIndex = null;
+      voidModal.classList.remove("show");
+      voidConfirmBtn.disabled = false;
+      voidConfirmBtn.textContent = "Yes, Void Shipment";
+    }
+
+    async function confirmVoidShipment() {
+      if (pendingVoidIndex === null) return;
+
+      const index = pendingVoidIndex;
+      const record = window.currentRecords?.[index];
+      if (!record) {
+        closeVoidModal();
+        return;
+      }
+
+      const identifier = getRecordIdentifier(record);
+      if (!identifier) {
+        closeVoidModal();
+        showStatus("Is shipment ka AWB / row number available nahi hai.", "danger");
+        return;
+      }
+
+      voidConfirmBtn.disabled = true;
+      voidConfirmBtn.textContent = "Voiding...";
+
+      try {
+        /*
+         * Code.gs ko action=void handle karna hoga.
+         * rowNumber preferred hai; AWB fallback ke taur par bheja ja raha hai.
+         */
+        const params = new URLSearchParams();
+        params.set("action", "void");
+        params.set("rowNumber", String(record._rowNumber || record.rowNumber || ""));
+        params.set("awb", String(record.awb_number || record.awb || ""));
+
+        const response = await fetch(API_URL + "?" + params.toString(), {
+          method: "GET",
+          cache: "no-store"
+        });
+
+        if (!response.ok) throw new Error("Server response error");
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || "Shipment void nahi hui.");
+        }
+
+        // Update the current row immediately so the user sees the new status.
+        record.status = "VOIDED";
+        record.shipment_status = "VOIDED";
+
+        closeVoidModal();
+        renderResults(window.currentRecords, resultsTitle.textContent);
+        showStatus(
+          "Shipment " + (record.awb_number || "") + " successfully void ho gayi.",
+          "success"
+        );
+
+      } catch (error) {
+        console.error("Void shipment error:", error);
+        voidConfirmBtn.disabled = false;
+        voidConfirmBtn.textContent = "Yes, Void Shipment";
+
+        showStatus(
+          error.message ||
+          "Shipment void nahi hui. Code.gs mein action=void support check karein.",
+          "danger"
+        );
+      }
+    }
+
+    function updateSelectAllState() {
+      const checks = Array.from(document.querySelectorAll(".row-check"));
+      if (!checks.length) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+      }
+
+      const checkedCount = checks.filter(c => c.checked).length;
+      selectAll.checked = checkedCount === checks.length;
+      selectAll.indeterminate = checkedCount > 0 && checkedCount < checks.length;
+    }
+
+    window.toggleRowSelection = function(index, checked) {
+      const row = document.querySelector(`tr[data-record-index="${index}"]`);
+      if (row) row.classList.toggle("selected-row", checked);
+      updateSelectAllState();
+    };
+
     function renderResults(records, title) {
       resultsTitle.textContent = title;
       detailsCard.style.display = "none";
@@ -505,17 +772,28 @@
       if (!records || records.length === 0) {
         resultsBody.innerHTML = `
           <tr>
-            <td colspan="12" class="text-center py-4 text-danger fw-bold">
+            <td colspan="13" class="text-center py-4 text-danger fw-bold">
               ❌ Booking not found / No records found
             </td>
           </tr>`;
         return;
       }
 
-      resultsBody.innerHTML = records.map((r, index) => `
-        <tr>
+      resultsBody.innerHTML = records.map((r, index) => {
+        const voided = isRecordVoided(r);
+        return `
+        <tr data-record-index="${index}" class="${voided ? "voided-row" : ""}">
+          <td class="select-col" onclick="event.stopPropagation();">
+            <input type="checkbox" class="row-check"
+                   data-index="${index}"
+                   title="Select shipment"
+                   onchange="toggleRowSelection(${index}, this.checked)">
+          </td>
           <td onclick="showDetails(${index})">${formatValue(r.date)}</td>
-          <td onclick="showDetails(${index})" class="fw-bold text-primary">${formatValue(r.awb_number)}</td>
+          <td onclick="showDetails(${index})" class="fw-bold text-primary">
+            ${formatValue(r.awb_number)}
+            ${voided ? '<span class="void-badge">VOIDED</span>' : ''}
+          </td>
           <td onclick="showDetails(${index})" class="fw-bold text-success">${formatValue(r.tracking_number)}</td>
           <td onclick="showDetails(${index})">${formatValue(r.shipper_name || r.shipper_company)}</td>
           <td onclick="showDetails(${index})">${formatValue(r.receiver_attention || r.receiver_company)}</td>
@@ -542,10 +820,19 @@
                       title="Print Shipment">
                 🖨️
               </button>
+              <button type="button" class="btn btn-sm btn-outline-danger action-btn"
+                      onclick="event.stopPropagation(); openVoidModal(${index})"
+                      title="${voided ? "Shipment already voided" : "Void Shipment"}"
+                      ${voided ? "disabled" : ""}>
+                🚫
+              </button>
             </div>
           </td>
         </tr>
-      `).join("");
+      `;
+      }).join("");
+
+      updateSelectAllState();
 
       // Normalize tracking number from a few possible sheet/API field names.
       records.forEach(r => {
@@ -632,7 +919,7 @@
         console.error(error);
         resultsBody.innerHTML = `
           <tr>
-            <td colspan="12" class="text-center py-4 text-danger fw-bold">
+            <td colspan="13" class="text-center py-4 text-danger fw-bold">
               ❌ Unable to connect with Google Sheet.
             </td>
           </tr>`;
@@ -651,6 +938,32 @@
       endInput.value = "";
       searchBookings();
     }
+
+    // Select / deselect all visible shipments in one click.
+    selectAll.addEventListener("change", function() {
+      const checked = this.checked;
+      document.querySelectorAll(".row-check").forEach(function(box) {
+        box.checked = checked;
+        const index = Number(box.dataset.index);
+        const row = document.querySelector(`tr[data-record-index="${index}"]`);
+        if (row) row.classList.toggle("selected-row", checked);
+      });
+      this.indeterminate = false;
+    });
+
+    // Void confirmation controls.
+    voidCancelBtn.addEventListener("click", closeVoidModal);
+    voidConfirmBtn.addEventListener("click", confirmVoidShipment);
+
+    voidModal.addEventListener("click", function(e) {
+      if (e.target === voidModal) closeVoidModal();
+    });
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape" && voidModal.classList.contains("show")) {
+        closeVoidModal();
+      }
+    });
 
     searchBtn.addEventListener("click", searchBookings);
 
