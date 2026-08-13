@@ -805,6 +805,14 @@
       setToday();
 
       // Initial state: clean and frozen. New Booking unlocks the form.
+      // Only an active selectedShipment + bookingOpenMode may open a shipment.
+      if (!sessionStorage.getItem("selectedShipment") ||
+          !sessionStorage.getItem("bookingOpenMode")) {
+        bookingEditMode = false;
+        bookingRowNumber = "";
+        $("#toggleEdit").text("🆕 New Booking").show();
+      }
+
       $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", true);
       $(".country-select, .service-select").prop("disabled", true).trigger("change");
       $("#manualService").prop("disabled", true);
@@ -906,7 +914,22 @@
 
       // ❌ CANCEL BOOKING
       $(".cancel").on("click", function () {
+        // IMPORTANT:
+        // Cancel must completely end the temporary View/Edit session.
+        // Otherwise sessionStorage survives page navigation/refresh and
+        // booking.html loads the old shipment again in Edit mode.
+        sessionStorage.removeItem("selectedShipment");
+        sessionStorage.removeItem("bookingOpenMode");
+        sessionStorage.removeItem("bookingRowNumber");
+
+        // Safety: remove any older/localStorage copy too.
+        localStorage.removeItem("selectedShipment");
+        localStorage.removeItem("bookingOpenMode");
+        localStorage.removeItem("bookingRowNumber");
+
         // Cancel means discard current entry and return to a clean frozen form.
+        bookingEditMode = false;
+        bookingRowNumber = "";
         $form[0].reset();
         $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", false);
         $(".country-select, .service-select").prop("disabled", false).val(null).trigger("change");
