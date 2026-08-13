@@ -183,6 +183,15 @@
     window.loginUser = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+
+      // A fresh login must never reopen an old shipment edit/preview session.
+      sessionStorage.removeItem("selectedShipment");
+      sessionStorage.removeItem("bookingOpenMode");
+      sessionStorage.removeItem("bookingRowNumber");
+      localStorage.removeItem("selectedShipment");
+      localStorage.removeItem("bookingOpenMode");
+      localStorage.removeItem("bookingRowNumber");
+
       signInWithEmailAndPassword(auth, email, password)
         .then(() => {
           document.getElementById("authMessage").innerText = "✅ Login Successful!";
