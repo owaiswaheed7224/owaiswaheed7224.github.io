@@ -205,8 +205,22 @@
       }
     });
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      signOut(auth).then(() => (window.location.href = "index.html"));
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      // Clear any temporary shipment preview/edit data before logout.
+      sessionStorage.removeItem("selectedShipment");
+      sessionStorage.removeItem("bookingOpenMode");
+      sessionStorage.removeItem("bookingRowNumber");
+
+      // Also clear possible localStorage copies, if any.
+      localStorage.removeItem("selectedShipment");
+      localStorage.removeItem("bookingOpenMode");
+      localStorage.removeItem("bookingRowNumber");
+
+      try {
+        await signOut(auth);
+      } finally {
+        window.location.href = "index.html";
+      }
     });
 
     // Demo Charts
