@@ -40,6 +40,14 @@
       }
 
       try {
+        // Fresh login: remove any old shipment edit/preview state.
+        sessionStorage.removeItem("selectedShipment");
+        sessionStorage.removeItem("bookingOpenMode");
+        sessionStorage.removeItem("bookingRowNumber");
+        localStorage.removeItem("selectedShipment");
+        localStorage.removeItem("bookingOpenMode");
+        localStorage.removeItem("bookingRowNumber");
+
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         msg.innerHTML = "<span class='text-success'>Login successful! Redirecting...</span>";
 
