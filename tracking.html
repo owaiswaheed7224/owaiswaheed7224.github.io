@@ -584,6 +584,50 @@ function escapeHtml(v){
     .replace(/'/g,"&#039;");
 }
 
+// Keep every tracking date/time short and readable.
+// Example: 14 Aug 2026, 12:05 AM
+function shortDateTime(value){
+  if(!value) return "—";
+
+  const text=String(value).trim();
+  if(!text) return "—";
+
+  const d=new Date(text);
+  if(!isNaN(d.getTime())){
+    return d.toLocaleString("en-GB",{
+      day:"2-digit",
+      month:"short",
+      year:"numeric",
+      hour:"2-digit",
+      minute:"2-digit",
+      hour12:true
+    }).replace(/,?\s*(GMT.*|Pakistan Standard Time.*)$/i,"");
+  }
+
+  // Also handle ISO date + time returned as separate text.
+  const m=text.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}:\d{2})/);
+  if(m){
+    const d2=new Date(m[1]+"T"+m[2]);
+    if(!isNaN(d2.getTime())){
+      return d2.toLocaleString("en-GB",{
+        day:"2-digit",month:"short",year:"numeric",
+        hour:"2-digit",minute:"2-digit",hour12:true
+      });
+    }
+  }
+
+  return text;
+}
+
+function shortDate(value){
+  if(!value) return "—";
+  const d=new Date(String(value).trim());
+  if(!isNaN(d.getTime())){
+    return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+  }
+  return String(value).trim();
+}
+
 function trackShipment(){
   const no=document.getElementById("trackingNo").value.trim();
   const result=document.getElementById("result");
@@ -610,16 +654,16 @@ function trackShipment(){
       const history=Array.isArray(data.history) ? data.history : [];
       const latest=history.length ? history[0] : null;
       const currentStatus=latest ? latest.status : "Shipment Booked";
-      const origin=[s.shipCity,s.shipCountry].filter(Boolean).join(", ") || "—";
-      const destination=[s.receiverCity,s.receiverCountry].filter(Boolean).join(", ") || "—";
-      const lastUpdate=latest ? latest.dateTime : (s.bookingDate || "—");
+      const origin=[s.shipCity || s.ship_city,s.shipCountry || s.ship_country].filter(Boolean).join(", ") || "—";
+      const destination=[s.receiverCity || s.receiver_city,s.receiverCountry || s.receiver_country].filter(Boolean).join(", ") || "—";
+      const lastUpdate=latest ? shortDateTime(latest.dateTime) : shortDate(s.bookingDate);
 
       const events=history.map(function(item){
         return `
           <div class="event">
             <div class="event-dot"></div>
             <h4>${escapeHtml(item.status)}</h4>
-            <p>${escapeHtml(item.city)}, ${escapeHtml(item.country)} &nbsp;•&nbsp; ${escapeHtml(item.dateTime)}</p>
+            <p>${escapeHtml(item.city || "")}${item.country ? ", "+escapeHtml(item.country) : ""} &nbsp;•&nbsp; ${escapeHtml(shortDateTime(item.dateTime))}</p>
           </div>
         `;
       }).join("");
