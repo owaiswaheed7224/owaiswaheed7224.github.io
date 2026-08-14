@@ -754,11 +754,16 @@
     function loadShipmentFromSearching() {
       const raw = sessionStorage.getItem("selectedShipment");
       const mode = sessionStorage.getItem("bookingOpenMode");
+      const storedRowNumber = sessionStorage.getItem("bookingRowNumber");
+
       if (!raw || !mode) return;
+
       try {
         const record = JSON.parse(raw);
-        bookingRowNumber = record._rowNumber || sessionStorage.getItem("bookingRowNumber") || "";
+
+        bookingRowNumber = record._rowNumber || storedRowNumber || "";
         populateBookingFromRecord(record);
+
         if (mode === "edit") {
           bookingEditMode = true;
           setBookingFormEditable(true);
@@ -772,8 +777,33 @@
           $("#toggleEdit").hide();
           $("#printBooking").show();
         }
+
+        /*
+         * IMPORTANT:
+         * Searching.html uses sessionStorage only as a one-time hand-off
+         * to booking.html. Once the shipment has been loaded successfully,
+         * remove that hand-off data immediately.
+         *
+         * This prevents the old shipment from appearing again when the
+         * user navigates away and later returns to booking.html, and also
+         * prevents F5 from restoring the previous View/Edit shipment.
+         */
+        sessionStorage.removeItem("selectedShipment");
+        sessionStorage.removeItem("bookingOpenMode");
+        sessionStorage.removeItem("bookingRowNumber");
+
+        // Also clear any legacy localStorage copies, if they exist.
+        localStorage.removeItem("selectedShipment");
+        localStorage.removeItem("bookingOpenMode");
+        localStorage.removeItem("bookingRowNumber");
+
       } catch (err) {
         console.error("Unable to load selected shipment", err);
+
+        // If the hand-off data is invalid, don't leave it stuck in storage.
+        sessionStorage.removeItem("selectedShipment");
+        sessionStorage.removeItem("bookingOpenMode");
+        sessionStorage.removeItem("bookingRowNumber");
       }
     }
 
