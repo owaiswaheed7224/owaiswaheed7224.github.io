@@ -371,7 +371,7 @@ function searchShipment() {
           result.shipment.consigneeName || "—";
 
         document.getElementById("bookingDate").textContent =
-          result.shipment.bookingDate || "—";
+          shortDate(result.shipment.bookingDate);
 
         document.getElementById("weight").textContent =
           result.shipment.weight
@@ -495,6 +495,63 @@ function submitStatus() {
   );
 }
 
+
+function shortDateTime(value) {
+  if (!value) return "—";
+
+  const text = String(value).trim();
+  if (!text) return "—";
+
+  const d = new Date(text);
+
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    }).replace(/,?\s*(GMT.*|Pakistan Standard Time.*)$/i, "");
+  }
+
+  // Handle YYYY-MM-DD HH:mm / ISO-style values.
+  const m = text.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{1,2}:\d{2})/);
+  if (m) {
+    const d2 = new Date(m[1] + "T" + m[2]);
+    if (!isNaN(d2.getTime())) {
+      return d2.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      });
+    }
+  }
+
+  return text
+    .replace(/\s*\(Pakistan Standard Time\)\s*/gi, "")
+    .replace(/\s*GMT[+-]\d{4}\s*/gi, "")
+    .trim();
+}
+
+function shortDate(value) {
+  if (!value) return "—";
+
+  const d = new Date(String(value).trim());
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  }
+
+  return String(value).trim();
+}
+
 function renderHistory(history) {
   const box = document.getElementById("historyList");
 
@@ -516,7 +573,7 @@ function renderHistory(history) {
         '</div>' +
         '<div class="meta">' +
           '<i class="bi bi-calendar3"></i> ' +
-          escapeHtml(item.dateTime) +
+          escapeHtml(shortDateTime(item.dateTime)) +
         '</div>' +
         '<div class="loc">' +
           '<i class="bi bi-geo-alt-fill text-primary"></i> ' +
