@@ -725,9 +725,7 @@ function trackShipment(){
             <div class="detail"><small>Last Update</small><strong>${escapeHtml(lastUpdate)}</strong></div>
           </div>
 
-          <div class="details" style="margin-top:12px">
-            <div class="detail"><small>Customer</small><strong>${escapeHtml(s.customerName || "—")}</strong></div>
-            <div class="detail"><small>Consignee</small><strong>${escapeHtml(s.consigneeName || "—")}</strong></div>
+          <div class="details" style="margin-top:12px;grid-template-columns:1fr">
             <div class="detail"><small>Weight</small><strong>${escapeHtml(s.weight ? s.weight+" KG" : "—")}</strong></div>
           </div>
 
