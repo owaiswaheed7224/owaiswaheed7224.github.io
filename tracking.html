@@ -701,7 +701,6 @@ function trackShipment(){
 
       const events=history.map(function(item){
         const place=[item.city || "", item.country || ""].filter(Boolean).join(", ");
-        const sourceLabel=item.sourceType === "manual" ? "Manual Update" : "ORIO Express";
         const remarks=item.remarks ? " &nbsp;•&nbsp; "+escapeHtml(item.remarks) : "";
 
         return `
@@ -709,10 +708,9 @@ function trackShipment(){
             <div class="event-dot"></div>
             <h4>${escapeHtml(item.status || "Shipment Update")}</h4>
             <p>
-              ${escapeHtml(place || sourceLabel)}
+              ${escapeHtml(place)}
               ${place ? " &nbsp;•&nbsp; " : ""}
               ${escapeHtml(shortDateTime(item.dateTime || item.entryTime))}
-              &nbsp;•&nbsp; ${escapeHtml(sourceLabel)}
               ${remarks}
             </p>
           </div>
