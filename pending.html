@@ -38,7 +38,7 @@
       border-radius: 8px;
       transition: 0.3s;
     }
-    .sidebar a:hover { background: #0b5ed7; }
+    .sidebar a:hover, .sidebar a.active { background: #0b5ed7; box-shadow: inset 4px 0 0 #fff; }
 
     /* Navbar */
     .navbar-custom {
@@ -67,15 +67,29 @@
     <div class="logo-box">
       <img src="Logo.png" alt="Company Logo">
     </div>
-    <a href="dashboard.html">🏠 Dashboard</a>
-    <a href="#">📦 Shipment Booking</a>
-    <a href="#">🔍 Searching Booking</a>
-    <a href="#">🚚 Track Shipments</a>
-    <a href="pending.html" style="background:#0b5ed7;">⏳ Pending Signups</a>
-    <a href="approved.html">✅ Approved Signups</a>
-    <a href="#">💰 Rate Inquiry</a>
-    <a href="#">📃 Account List</a>
+    <a href="dashboard.html" data-page="dashboard.html">🏠 Dashboard</a>
+    <a href="booking.html" data-page="booking.html">📦 Shipment Booking</a>
+    <a href="searching.html" data-page="searching.html">🔍 Searching Booking</a>
+    <a href="status.html" data-page="status.html">🚚 Track Shipments</a>
+    <a href="pending.html" data-page="pending.html">⏳ Pending Signups</a>
+    <a href="approved.html" data-page="approved.html">✅ Approved Signups</a>
+    <a href="rateinquiry.html" data-page="rateinquiry.html">💰 Rate Inquiry</a>
+    <a href="accountlist.html" data-page="accountlist.html">📃 Account List</a>
+    <a href="manageclients.html" data-page="manageclients.html">👥 Manage Clients</a>
   </div>
+
+  <script>
+    // Keep sidebar order consistent and automatically mark the current page active.
+    (function () {
+      const currentPage = (window.location.pathname.split("/").pop() || "pending.html").toLowerCase();
+      document.querySelectorAll(".sidebar a[data-page]").forEach(function (link) {
+        link.classList.toggle(
+          "active",
+          (link.getAttribute("data-page") || "").toLowerCase() === currentPage
+        );
+      });
+    })();
+  </script>
 
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm fixed-top">
