@@ -70,15 +70,15 @@ textarea{min-height:105px;resize:vertical}
 <body>
 <aside class="sidebar">
 <div class="logo-box"><img src="Logo.png" alt="Company Logo"></div>
-<a href="dashboard.html"><span>🏠 Dashboard</span></a>
-<a href="booking.html" class="client-feature" id="shipBook"><span>📦 Shipment Booking</span></a>
-<a href="#" class="client-feature" id="searchBook"><span>🔍 Searching Booking</span></a>
-<a href="status.html" class="client-feature active" id="trackShip"><span>🚚 Track Shipments</span></a>
-<a href="rateinquiry.html" class="client-feature" id="rateInq"><span>💰 Rate Inquiry</span></a>
-<a href="pending.html" class="admin-only"><span>⏳ Pending Signups</span></a>
-<a href="approved.html" class="admin-only"><span>✅ Approved Signups</span></a>
-<a href="accountlist.html" class="admin-only"><span>📃 Account List</span></a>
-<a href="manageclients.html" class="admin-only"><span>👥 Manage Clients</span></a>
+<a href="dashboard.html" data-page="dashboard.html"><span>🏠 Dashboard</span></a>
+<a href="booking.html" data-page="booking.html" class="client-feature" id="shipBook"><span>📦 Shipment Booking</span></a>
+<a href="searching.html" data-page="searching.html" class="client-feature" id="searchBook"><span>🔍 Searching Booking</span></a>
+<a href="status.html" data-page="status.html" class="client-feature" id="trackShip"><span>🚚 Track Shipments</span></a>
+<a href="rateinquiry.html" data-page="rateinquiry.html" class="client-feature" id="rateInq"><span>💰 Rate Inquiry</span></a>
+<a href="pending.html" data-page="pending.html" class="admin-only"><span>⏳ Pending Signups</span></a>
+<a href="approved.html" data-page="approved.html" class="admin-only"><span>✅ Approved Signups</span></a>
+<a href="accountlist.html" data-page="accountlist.html" class="admin-only"><span>📃 Account List</span></a>
+<a href="manageclients.html" data-page="manageclients.html" class="admin-only"><span>👥 Manage Clients</span></a>
 </aside>
 
 <main class="main">
@@ -155,6 +155,17 @@ textarea{min-height:105px;resize:vertical}
 </div>
 </section>
 </main>
+
+<script>
+(function () {
+  const currentPage = (window.location.pathname.split("/").pop() || "status.html").toLowerCase();
+
+  document.querySelectorAll(".sidebar a[data-page]").forEach(function (link) {
+    const target = (link.getAttribute("data-page") || "").toLowerCase();
+    link.classList.toggle("active", target === currentPage);
+  });
+})();
+</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
