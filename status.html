@@ -47,6 +47,29 @@ textarea{min-height:105px;resize:vertical}
 .error{background:#fee2e2;color:#991b1b}
 .success{background:#dcfce7;color:#166534}
 
+.status-type-wrap{margin-bottom:14px}
+.status-type-grid{display:flex;flex-wrap:wrap;gap:7px}
+.status-option{position:relative}
+.status-option input{position:absolute;opacity:0;pointer-events:none}
+.status-option label{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #d1d5db;border-radius:999px;background:#fff;color:#374151;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.status-option label:hover{border-color:#0d6efd;background:#f8fbff}
+.status-option input:checked+label{border-color:#0d6efd;background:#0d6efd;color:#fff}
+.status-option input:checked+label:before{content:"✓";font-weight:900}
+.current-status{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#e8f1ff;color:#0d6efd;font-size:13px;font-weight:800;margin-top:7px}
+.current-status i{font-size:15px}
+.history-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.history-item{padding-right:105px}
+.history-actions{position:absolute;right:12px;top:14px}
+.edit-status-btn{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700}
+.edit-status-btn:hover{background:#f3f4f6}
+.status-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800;margin-left:7px}
+@media(max-width:600px){
+  .status-type-grid{gap:5px}
+  .status-option label{padding:6px 8px;font-size:11px}
+  .history-item{padding-right:20px}
+  .history-actions{position:static;margin-top:10px}
+}
+
 @media(max-width:800px){
 .sidebar{width:70px;padding:15px 8px}
 .sidebar .logo-box{font-size:0;padding:13px 5px}
@@ -105,6 +128,9 @@ textarea{min-height:105px;resize:vertical}
 <div class="shipment-head">
 <div class="label">Shipment Number</div>
 <div id="displayShipmentNumber" class="awb"></div>
+<div id="currentStatusBadge" class="current-status" style="display:none">
+<i class="bi bi-circle-fill"></i><span id="currentStatusText">—</span>
+</div>
 </div>
 
 <div class="details">
@@ -115,16 +141,38 @@ textarea{min-height:105px;resize:vertical}
 </div>
 
 <div class="status-area">
-<h5 class="fw-bold mb-3">Shipment Status History</h5>
+<div class="history-head">
+<h5 class="fw-bold mb-0">Shipment Status History</h5>
+<button class="btn btn-sm btn-primary" onclick="openStatusForm()"><i class="bi bi-plus-circle"></i> Add Status</button>
+</div>
 
-<button class="add-status" onclick="openStatusForm()">
+<button class="add-status d-none" onclick="openStatusForm()">
 <i class="bi bi-plus-circle"></i> Add Status
 </button>
 
 <div id="statusForm">
+<div class="status-type-wrap">
+<label class="form-label fw-semibold mb-2">Current Shipment Status</label>
+<div class="status-type-grid">
+  <div class="status-option"><input type="radio" name="statusType" id="stPending" value="Pending"><label for="stPending">Pending</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stPickedUp" value="Picked Up"><label for="stPickedUp">Picked Up</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stInTransit" value="In Transit"><label for="stInTransit">In Transit</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stOnWay" value="On the Way"><label for="stOnWay">On the Way</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stCustoms" value="Customs Clearance"><label for="stCustoms">Customs Clearance</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stHold" value="Customs Hold"><label for="stHold">Customs Hold</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stException" value="Exception"><label for="stException">Exception</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stOFD" value="Out for Delivery"><label for="stOFD">Out for Delivery</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stDelivered" value="Delivered"><label for="stDelivered">Delivered</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stReturned" value="Returned"><label for="stReturned">Returned</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stLost" value="Lost"><label for="stLost">Lost</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stMissing" value="Shipment Missing"><label for="stMissing">Shipment Missing</label></div>
+  <div class="status-option"><input type="radio" name="statusType" id="stCancelled" value="Cancelled"><label for="stCancelled">Cancelled</label></div>
+</div>
+</div>
+
 <div class="mb-3">
-<label class="form-label fw-semibold">Shipment History / Status</label>
-<textarea id="statusText" class="form-control" placeholder="Example: Shipment picked up from customer"></textarea>
+<label class="form-label fw-semibold">Remarks / Movement Details</label>
+<textarea id="statusText" class="form-control" placeholder="Example: Shipment arrived at destination hub"></textarea>
 </div>
 
 <div class="row g-3">
@@ -227,6 +275,7 @@ const TRACKING_API_URL =
 "https://script.google.com/macros/s/AKfycbwFGbq2qQw_wXx1vKKry5rJPL6TlPYYUMJMyOpoCM7T67TyfKta9t97wvOCkjdlC2_B/exec";
 
 let currentShipment = "";
+let currentHistory = [];
 let activeRequest = null;
 
 /*
@@ -389,7 +438,8 @@ function searchShipment() {
             ? result.shipment.weight + " KG"
             : "—";
 
-        renderHistory(result.history || []);
+        currentHistory = result.history || [];
+        renderHistory(currentHistory);
 
         document.getElementById("shipmentSection").style.display = "block";
         document.getElementById("alertBox").style.display = "none";
@@ -410,31 +460,81 @@ function searchShipment() {
   );
 }
 
-function openStatusForm() {
+let editingHistoryIndex = null;
+
+const STATUS_TYPES = [
+  "Pending","Picked Up","In Transit","On the Way","Customs Clearance",
+  "Customs Hold","Exception","Out for Delivery","Delivered","Returned",
+  "Lost","Shipment Missing","Cancelled"
+];
+
+function getSelectedStatusType() {
+  const checked = document.querySelector('input[name="statusType"]:checked');
+  return checked ? checked.value : "";
+}
+
+function selectStatusType(type) {
+  document.querySelectorAll('input[name="statusType"]').forEach(function (radio) {
+    radio.checked = radio.value === type;
+  });
+}
+
+function openStatusForm(editIndex = null, item = null) {
+  editingHistoryIndex = editIndex;
   document.getElementById("statusForm").style.display = "block";
 
   const now = new Date();
-
   document.getElementById("statusDateTime").value =
-    new Date(
-      now.getTime() - now.getTimezoneOffset() * 60000
-    ).toISOString().slice(0, 16);
+    new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+  if (item) {
+    selectStatusType(item.statusType || normalizeStatusType(item.status));
+    document.getElementById("statusText").value = item.remarks || item.status || "";
+    document.getElementById("country").value = item.country || "";
+    document.getElementById("city").value = item.city || "";
+    if (item.dateTime) {
+      const d = new Date(item.dateTime);
+      if (!isNaN(d.getTime())) {
+        document.getElementById("statusDateTime").value =
+          new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      }
+    }
+    document.getElementById("submitButton").innerHTML =
+      '<i class="bi bi-pencil-square"></i> Update Status';
+  } else {
+    selectStatusType("");
+    document.getElementById("statusText").value = "";
+    document.getElementById("country").value = "";
+    document.getElementById("city").value = "";
+    document.getElementById("submitButton").innerHTML =
+      '<i class="bi bi-check-circle"></i> Submit Status';
+  }
 
   document.getElementById("statusText").focus();
 }
 
 function closeStatusForm() {
   document.getElementById("statusForm").style.display = "none";
+  editingHistoryIndex = null;
+}
+
+function normalizeStatusType(status) {
+  const s = String(status || "").toLowerCase();
+  const found = STATUS_TYPES.find(function (type) {
+    return s === type.toLowerCase() || s.includes(type.toLowerCase());
+  });
+  return found || "";
 }
 
 function submitStatus() {
-  const status = document.getElementById("statusText").value.trim();
+  const statusType = getSelectedStatusType();
+  const remarks = document.getElementById("statusText").value.trim();
   const dateTime = document.getElementById("statusDateTime").value;
   const country = document.getElementById("country").value.trim();
   const city = document.getElementById("city").value.trim();
 
-  if (!status || !dateTime || !country || !city) {
-    showAlert("Please complete all status fields.", "error");
+  if (!statusType || !remarks || !dateTime || !country || !city) {
+    showAlert("Please select status and complete all fields.", "error");
     return;
   }
 
@@ -444,68 +544,74 @@ function submitStatus() {
   }
 
   const btn = document.getElementById("submitButton");
-
   btn.disabled = true;
-  btn.innerHTML =
-    '<span class="spinner-border spinner-border-sm"></span> Saving...';
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+
+  const params = {
+    action: editingHistoryIndex === null ? "addshipmentstatus" : "updateshipmentstatus",
+    awb: currentShipment,
+    statusType: statusType,
+    status: remarks,
+    remarks: remarks,
+    dateTime: dateTime,
+    country: country,
+    city: city
+  };
+
+  if (editingHistoryIndex !== null) {
+    params.index = editingHistoryIndex;
+  }
 
   callTrackingAPI(
-    {
-      action: "addshipmentstatus",
-      awb: currentShipment,
-      status: status,
-      dateTime: dateTime,
-      country: country,
-      city: city
-    },
-
+    params,
     function(result) {
       try {
         if (!result || !result.success) {
-          showAlert(
-            (result && result.message) || "Unable to add status.",
-            "error"
-          );
+          showAlert((result && result.message) || "Unable to save status.", "error");
           return;
         }
 
-        document.getElementById("statusText").value = "";
-        document.getElementById("country").value = "";
-        document.getElementById("city").value = "";
-
         closeStatusForm();
-        renderHistory(result.history || []);
+        currentHistory = result.history || [];
+        renderHistory(currentHistory);
 
         showAlert(
-          "Shipment status added successfully.",
+          editingHistoryIndex === null
+            ? "Shipment status added successfully."
+            : "Shipment status updated successfully.",
           "success"
         );
-
       } catch (err) {
         showAlert("System error: " + err.message, "error");
-
       } finally {
         btn.disabled = false;
-        btn.innerHTML =
-          '<i class="bi bi-check-circle"></i> Submit Status';
+        btn.innerHTML = '<i class="bi bi-check-circle"></i> Submit Status';
       }
     },
-
     function(error) {
       btn.disabled = false;
-      btn.innerHTML =
-        '<i class="bi bi-check-circle"></i> Submit Status';
-
-      showAlert(
-        "Unable to connect to shipment tracking server. Please try again.",
-        "error"
-      );
-
+      btn.innerHTML = '<i class="bi bi-check-circle"></i> Submit Status';
+      showAlert("Unable to connect to shipment tracking server. Please try again.", "error");
       console.error(error);
     }
   );
 }
 
+function updateCurrentStatus(history) {
+  const badge = document.getElementById("currentStatusBadge");
+  const text = document.getElementById("currentStatusText");
+
+  if (!history || !history.length) {
+    badge.style.display = "none";
+    return;
+  }
+
+  const latest = history[0] || history[history.length - 1];
+  const current = latest.statusType || normalizeStatusType(latest.status) || latest.status || "—";
+
+  text.textContent = current;
+  badge.style.display = "inline-flex";
+}
 
 function shortDateTime(value) {
   if (!value) return "—";
@@ -565,6 +671,7 @@ function shortDate(value) {
 
 function renderHistory(history) {
   const box = document.getElementById("historyList");
+  updateCurrentStatus(history);
 
   if (!history || !history.length) {
     box.innerHTML =
@@ -575,12 +682,16 @@ function renderHistory(history) {
     return;
   }
 
-  box.innerHTML = history.map(function(item) {
+  box.innerHTML = history.map(function(item, index) {
+    const type = item.statusType || normalizeStatusType(item.status) || "Update";
+    const remarks = item.remarks || item.status || "";
+
     return (
       '<div class="history-item">' +
         '<div class="dot"></div>' +
         '<div class="status-text">' +
-          escapeHtml(item.status) +
+          escapeHtml(type) +
+          '<span class="status-badge">STATUS</span>' +
         '</div>' +
         '<div class="meta">' +
           '<i class="bi bi-calendar3"></i> ' +
@@ -592,9 +703,24 @@ function renderHistory(history) {
           ', ' +
           escapeHtml(item.country) +
         '</div>' +
+        '<div class="mt-2">' + escapeHtml(remarks) + '</div>' +
+        '<div class="history-actions">' +
+          '<button class="edit-status-btn" onclick="editHistory(' + index + ')">' +
+            '<i class="bi bi-pencil"></i> Edit' +
+          '</button>' +
+        '</div>' +
       '</div>'
     );
   }).join("");
+
+  window.currentHistory = history;
+}
+
+function editHistory(index) {
+  const history = window.currentHistory || [];
+  const item = history[index];
+  if (!item) return;
+  openStatusForm(index, item);
 }
 
 function escapeHtml(v) {
