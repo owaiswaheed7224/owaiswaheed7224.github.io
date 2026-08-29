@@ -27,7 +27,7 @@
 <body>
   <div class="signup-card">
     <h3 class="text-center mb-4">Customer Signup</h3>
-    <form id="signupForm">
+    <form id="signupForm" novalidate>
       <div class="mb-3">
         <label class="form-label">Full Name</label>
         <input type="text" id="fullName" class="form-control" placeholder="Enter your full name" required>
@@ -78,30 +78,45 @@
     const signupForm = document.getElementById("signupForm");
     const successMessage = document.getElementById("successMessage");
 
-    signupForm.addEventListener("submit", (e) => {
+    signupForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const fullName = document.getElementById("fullName").value;
-      const email = document.getElementById("email").value;
-      const phone = document.getElementById("phone").value;
+      const fullName = document.getElementById("fullName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
       const password = document.getElementById("password").value;
 
-      // Save request into pending approvals
-      const newReqRef = push(ref(db, "approvals/pending"));
-      set(newReqRef, {
-        fullName,
-        email,
-        phone,
-        password,   // ⚠️ ideally password ko plain text me mat rakho (baad me encrypt karna hoga)
-        status: "pending",
-        createdAt: new Date().toISOString()
-      }).then(() => {
+      // Clear browser-style validation issue and validate explicitly.
+      if (!fullName || !email || !phone || !password) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const submitBtn = signupForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+
+      try {
+        // Save request into pending approvals
+        const newReqRef = push(ref(db, "approvals/pending"));
+        await set(newReqRef, {
+          fullName,
+          email,
+          phone,
+          password,
+          status: "pending",
+          createdAt: new Date().toISOString()
+        });
+
         // Hide form, show success message
         signupForm.style.display = "none";
         successMessage.style.display = "block";
-      }).catch((err) => {
-        alert("Error: " + err.message);
-      });
+      } catch (err) {
+        console.error("Signup error:", err);
+        alert("Signup failed: " + (err?.message || "Unknown Firebase error"));
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit";
+      }
     });
   </script>
 </body>
