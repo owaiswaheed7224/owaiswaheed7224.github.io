@@ -216,6 +216,21 @@
       font-weight: 700;
     }
 
+    /* Status Badges */
+    .shipment-status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .status-delivered { background-color: #d1e7dd; color: #0f5132; }
+    .status-delivery { background-color: #cff4fc; color: #055160; }
+    .status-exception { background-color: #f8d7da; color: #842029; }
+    .status-pending { background-color: #fff3cd; color: #664d03; }
+    .status-default { background-color: #e2e3e5; color: #41464b; }
+
     /* Void confirmation modal */
     .void-modal-backdrop {
       position: fixed;
@@ -423,12 +438,13 @@
                 <th>Pieces</th>
                 <th>Weight</th>
                 <th>Total</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="resultsBody">
               <tr>
-                <td colspan="13" class="text-center py-4 text-muted">
+                <td colspan="14" class="text-center py-4 text-muted">
                   Loading bookings...
                 </td>
               </tr>
@@ -517,7 +533,8 @@
       ["Dim Weight", "dim_weight"],
       ["Payable", "payable"],
       ["Total", "total"],
-      ["Balance", "balance"]
+      ["Balance", "balance"],
+      ["Shipment Status", "status"]
     ];
 
     const awbInput = document.getElementById("awbNumber");
@@ -562,7 +579,7 @@
       selectAll.indeterminate = false;
       resultsBody.innerHTML = `
         <tr>
-          <td colspan="13" class="text-center py-4">
+          <td colspan="14" class="text-center py-4">
             <div class="spinner-border text-primary me-2"></div>
             Searching...
           </td>
@@ -574,10 +591,29 @@
       return escapeHtml(value);
     }
 
+    function renderStatusBadge(statusText) {
+      if (!statusText || statusText === "-") {
+        return `<span class="shipment-status-badge status-default">Pending / Unknown</span>`;
+      }
+      
+      const st = String(statusText).trim().toLowerCase();
+      
+      if (st.includes("delivered")) {
+        return `<span class="shipment-status-badge status-delivered">Delivered</span>`;
+      } else if (st.includes("delivery") || st.includes("out for delivery")) {
+        return `<span class="shipment-status-badge status-delivery">On Delivery</span>`;
+      } else if (st.includes("exemption") || st.includes("exception") || st.includes("hold")) {
+        return `<span class="shipment-status-badge status-exception">Exemption / Hold</span>`;
+      } else if (st.includes("void")) {
+        return `<span class="shipment-status-badge status-exception">Voided</span>`;
+      } else {
+        return `<span class="shipment-status-badge status-pending">${escapeHtml(statusText)}</span>`;
+      }
+    }
+
     function openBooking(record, mode) {
       if (!record) return;
 
-      // Keep the complete Google Sheet record available to booking.html.
       sessionStorage.setItem("selectedShipment", JSON.stringify(record));
       sessionStorage.setItem("bookingOpenMode", mode);
 
@@ -711,10 +747,6 @@
       voidConfirmBtn.textContent = "Voiding...";
 
       try {
-        /*
-         * Code.gs ko action=void handle karna hoga.
-         * rowNumber preferred hai; AWB fallback ke taur par bheja ja raha hai.
-         */
         const params = new URLSearchParams();
         params.set("action", "void");
         params.set("rowNumber", String(record._rowNumber || record.rowNumber || ""));
@@ -733,7 +765,6 @@
           throw new Error(data.message || "Shipment void nahi hui.");
         }
 
-        // Update the current row immediately so the user sees the new status.
         record.status = "VOIDED";
         record.shipment_status = "VOIDED";
 
@@ -784,7 +815,7 @@
       if (!records || records.length === 0) {
         resultsBody.innerHTML = `
           <tr>
-            <td colspan="13" class="text-center py-4 text-danger fw-bold">
+            <td colspan="14" class="text-center py-4 text-danger fw-bold">
               ❌ Booking not found / No records found
             </td>
           </tr>`;
@@ -793,6 +824,8 @@
 
       resultsBody.innerHTML = records.map((r, index) => {
         const voided = isRecordVoided(r);
+        const currentStatus = r.status || r.shipment_status || r.booking_status || "-";
+
         return `
         <tr data-record-index="${index}" class="${voided ? "voided-row" : ""}">
           <td class="select-col" onclick="event.stopPropagation();">
@@ -815,6 +848,7 @@
           <td onclick="showDetails(${index})">${formatValue(r.pieces)}</td>
           <td onclick="showDetails(${index})">${formatValue(r.weight)}</td>
           <td onclick="showDetails(${index})">${formatValue(r.total)}</td>
+          <td onclick="showDetails(${index})">${renderStatusBadge(currentStatus)}</td>
           <td>
             <div class="d-flex gap-1">
               <button type="button" class="btn btn-sm btn-outline-primary action-btn"
@@ -846,7 +880,6 @@
 
       updateSelectAllState();
 
-      // Normalize tracking number from a few possible sheet/API field names.
       records.forEach(r => {
         if (r.tracking_number === undefined || r.tracking_number === null) {
           r.tracking_number =
@@ -931,7 +964,7 @@
         console.error(error);
         resultsBody.innerHTML = `
           <tr>
-            <td colspan="13" class="text-center py-4 text-danger fw-bold">
+            <td colspan="14" class="text-center py-4 text-danger fw-bold">
               ❌ Unable to connect with Google Sheet.
             </td>
           </tr>`;
@@ -951,7 +984,6 @@
       searchBookings();
     }
 
-    // Select / deselect all visible shipments in one click.
     selectAll.addEventListener("change", function() {
       const checked = this.checked;
       document.querySelectorAll(".row-check").forEach(function(box) {
@@ -963,7 +995,6 @@
       this.indeterminate = false;
     });
 
-    // Void confirmation controls.
     voidCancelBtn.addEventListener("click", closeVoidModal);
     voidConfirmBtn.addEventListener("click", confirmVoidShipment);
 
@@ -991,7 +1022,6 @@
       loadRecent();
     });
 
-    // Automatically show last 7 days when page opens.
     loadRecent();
   </script>
 
