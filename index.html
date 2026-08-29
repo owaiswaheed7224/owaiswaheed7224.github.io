@@ -163,7 +163,7 @@
   <!-- Firebase Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserSessionPersistence } 
       from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -179,6 +179,11 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
+// IMPORTANT:
+// Keep Firebase login only in THIS browser tab.
+// A login/logout in another tab will not affect this tab.
+await setPersistence(auth, browserSessionPersistence);
+
     // Login
     window.loginUser = () => {
       const email = document.getElementById("email").value;
@@ -192,7 +197,8 @@
       localStorage.removeItem("bookingOpenMode");
       localStorage.removeItem("bookingRowNumber");
 
-      signInWithEmailAndPassword(auth, email, password)
+      setPersistence(auth, browserSessionPersistence)
+        .then(() => signInWithEmailAndPassword(auth, email, password))
         .then(() => {
           document.getElementById("authMessage").innerText = "✅ Login Successful!";
           document.getElementById("authMessage").classList.remove("text-danger");
