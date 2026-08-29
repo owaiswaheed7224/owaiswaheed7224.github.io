@@ -88,7 +88,7 @@
 
     <!-- ✅ Client Features -->
     <a href="https://owaiswaheed7224.github.io/booking.html" class="client-feature" id="shipBook">📦 Shipment Booking</a>
-    <a href="#" class="client-feature" id="searchBook">🔍 Searching Booking</a>
+    <a href="searching.html" class="client-feature" id="searchBook">🔍 Searching Booking</a>
     <a href="status.html" class="client-feature" id="trackShip">🚚 Track Shipments</a>
     <a href="rateinquiry.html" class="client-feature" id="rateInq">💰 Rate Inquiry</a>
 
@@ -202,12 +202,38 @@ await setPersistence(auth, browserSessionPersistence);
 
 
     // Sidebar active item
-    const currentPage = window.location.pathname.split("/").pop() || "dashboard.html";
+    // Works with both relative links (searching.html) and full URLs
+    // (for example the GitHub Pages booking.html link).
+    const currentPage = (window.location.pathname.split("/").pop() || "dashboard.html").toLowerCase();
+
     document.querySelectorAll(".sidebar a[href]").forEach(link => {
+      link.classList.remove("active");
+
       const href = link.getAttribute("href");
-      if (href && !href.startsWith("#") && href.split("/").pop() === currentPage) {
-        link.classList.add("active");
+      if (!href || href === "#") return;
+
+      try {
+        const target = new URL(href, window.location.href);
+        const targetPage = (target.pathname.split("/").pop() || "dashboard.html").toLowerCase();
+
+        // Highlight the exact page currently open.
+        if (targetPage === currentPage) {
+          link.classList.add("active");
+        }
+      } catch (e) {
+        // Ignore malformed URLs instead of breaking the sidebar.
       }
+    });
+
+    // Prevent "#" placeholder navigation and keep sidebar behavior consistent.
+    document.querySelectorAll(".sidebar a[href]").forEach(link => {
+      link.addEventListener("click", () => {
+        if (link.getAttribute("href") === "#") {
+          return;
+        }
+        document.querySelectorAll(".sidebar a[href]").forEach(item => item.classList.remove("active"));
+        link.classList.add("active");
+      });
     });
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
