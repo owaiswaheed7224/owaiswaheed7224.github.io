@@ -152,7 +152,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
     // Firebase Config
@@ -168,6 +168,11 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+
+// IMPORTANT:
+// Dashboard authentication is limited to this browser tab.
+// Logging out from another tab will NOT log this tab out.
+await setPersistence(auth, browserSessionPersistence);
     const db = getFirestore(app);
 
     // ✅ Role Handling
