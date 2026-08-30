@@ -700,19 +700,11 @@ function trackShipment(){
       const lastUpdate=latest ? shortDateTime(latest.dateTime) : shortDate(s.bookingDate);
 
       const events=history.map(function(item){
-        const place=[item.city || "", item.country || ""].filter(Boolean).join(", ");
-        const remarks=item.remarks ? " &nbsp;•&nbsp; "+escapeHtml(item.remarks) : "";
-
         return `
           <div class="event">
             <div class="event-dot"></div>
-            <h4>${escapeHtml(item.status || "Shipment Update")}</h4>
-            <p>
-              ${escapeHtml(place)}
-              ${place ? " &nbsp;•&nbsp; " : ""}
-              ${escapeHtml(shortDateTime(item.dateTime || item.entryTime))}
-              ${remarks}
-            </p>
+            <h4>${escapeHtml(item.status)}</h4>
+            <p>${escapeHtml(item.city || "")}${item.country ? ", "+escapeHtml(item.country) : ""} &nbsp;•&nbsp; ${escapeHtml(shortDateTime(item.dateTime))}</p>
           </div>
         `;
       }).join("");
