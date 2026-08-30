@@ -62,6 +62,8 @@ textarea{min-height:105px;resize:vertical}
 .history-actions{position:absolute;right:12px;top:14px}
 .edit-status-btn{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700}
 .edit-status-btn:hover{background:#f3f4f6}
+.delete-status-btn{border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;margin-left:5px}
+.delete-status-btn:hover{background:#fef2f2}
 .status-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800;margin-left:7px}
 @media(max-width:600px){
   .status-type-grid{gap:5px}
@@ -461,6 +463,7 @@ function searchShipment() {
 }
 
 let editingHistoryIndex = null;
+let editingUpdateId = null;
 
 const STATUS_TYPES = [
   "Pending","Picked Up","In Transit","On the Way","Customs Clearance",
@@ -481,6 +484,7 @@ function selectStatusType(type) {
 
 function openStatusForm(editIndex = null, item = null) {
   editingHistoryIndex = editIndex;
+  editingUpdateId = item && item.updateId ? String(item.updateId).trim() : null;
   document.getElementById("statusForm").style.display = "block";
 
   const now = new Date();
@@ -516,6 +520,7 @@ function openStatusForm(editIndex = null, item = null) {
 function closeStatusForm() {
   document.getElementById("statusForm").style.display = "none";
   editingHistoryIndex = null;
+  editingUpdateId = null;
 }
 
 function normalizeStatusType(status) {
@@ -543,12 +548,18 @@ function submitStatus() {
     return;
   }
 
+  if (editingHistoryIndex !== null && !editingUpdateId) {
+    showAlert("This status cannot be edited because its Update ID is missing.", "error");
+    return;
+  }
+
+  const isEditing = editingHistoryIndex !== null;
   const btn = document.getElementById("submitButton");
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
 
   const params = {
-    action: editingHistoryIndex === null ? "addshipmentstatus" : "updateshipmentstatus",
+    action: isEditing ? "updateshipmentstatus" : "addshipmentstatus",
     awb: currentShipment,
     statusType: statusType,
     status: remarks,
@@ -558,8 +569,8 @@ function submitStatus() {
     city: city
   };
 
-  if (editingHistoryIndex !== null) {
-    params.index = editingHistoryIndex;
+  if (isEditing) {
+    params.updateId = editingUpdateId;
   }
 
   callTrackingAPI(
@@ -576,9 +587,9 @@ function submitStatus() {
         renderHistory(currentHistory);
 
         showAlert(
-          editingHistoryIndex === null
-            ? "Shipment status added successfully."
-            : "Shipment status updated successfully.",
+          isEditing
+            ? "Shipment status updated successfully."
+            : "Shipment status added successfully.",
           "success"
         );
       } catch (err) {
@@ -596,6 +607,50 @@ function submitStatus() {
     }
   );
 }
+
+function deleteHistory(index) {
+  const history = window.currentHistory || [];
+  const item = history[index];
+
+  if (!item) {
+    showAlert("Status record not found.", "error");
+    return;
+  }
+
+  const updateId = String(item.updateId || "").trim();
+
+  if (!updateId) {
+    showAlert("This status cannot be deleted because its Update ID is missing.", "error");
+    return;
+  }
+
+  if (!confirm("Are you sure you want to delete this shipment status?")) {
+    return;
+  }
+
+  callTrackingAPI(
+    {
+      action: "deleteshipmentstatus",
+      awb: currentShipment,
+      updateId: updateId
+    },
+    function(result) {
+      if (!result || !result.success) {
+        showAlert((result && result.message) || "Unable to delete status.", "error");
+        return;
+      }
+
+      currentHistory = result.history || [];
+      renderHistory(currentHistory);
+      showAlert("Shipment status deleted successfully.", "success");
+    },
+    function(error) {
+      showAlert("Unable to connect to shipment tracking server. Please try again.", "error");
+      console.error(error);
+    }
+  );
+}
+
 
 function updateCurrentStatus(history) {
   const badge = document.getElementById("currentStatusBadge");
