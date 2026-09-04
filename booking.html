@@ -1893,7 +1893,7 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 <!-- SENDER BOX: ACC label/value stays ABOVE sender address -->
 <tr>
 <td>
-  <div class="h"><span class="n">1</span>ACC # <span class="head-value">${esc(v("reference_number") || "")}</span></div>
+  <div class="h"><span class="n">1</span>Order # <span class="head-value">${esc(v("reference_number") || "")}</span></div>
   <div class="person-box">
     <div class="vertical">SENDER</div>
     <div class="cell"><b>${esc(shipperName)}</b><br>${esc(v("ship_address1") || "")}<br>${esc([v("ship_address2"), v("ship_city"), v("ship_country")].filter(Boolean).join(" "))}${shipperPhone ? "<br>" + esc(shipperPhone) : ""}</div>
