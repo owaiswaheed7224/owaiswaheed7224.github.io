@@ -1902,7 +1902,7 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 
 <!-- RECEIVER BOX: AWB label/value stays ABOVE receiver address -->
 <td>
-  <div class="h"><span class="n">4</span>AWB# <span class="head-value">${esc(v("tracking_number") || awb || "")}</span></div>
+  <div class="h"><span class="n">4</span>AWB# <span class="head-value">${esc(awb || v("awb_number") || "")}</span></div>
   <div class="person-box">
     <div class="vertical">RECEIVER</div>
     <div class="cell"><b>${esc(receiverName)}</b><br>${esc(receiverAddress)}<br>${esc([v("receiver_city"), v("receiver_country"), receiverZip].filter(Boolean).join(" "))}<br>${esc(receiverPhone)}</div>
@@ -1990,11 +1990,11 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 </table>
 
 <div class="gap"></div>
-<div class="copybar"><div>NO. OF PKG<br>0 0 X 0</div><div>SENDER COPY</div><div>Help Line : 000-00000000</div></div>
+<div class="copybar"><div>NO. OF PKG<br>0 0 X 0</div><div>SENDER COPY</div><div>Help Line : 021-34524475-6</div></div>
 
 <table style="margin-top:1.3mm">
 <tr style="height:15mm">
-<td style="width:23%"><div class="h center">THIRDPARTY NUMBER</div><div class="cell center">${esc(ref)}</div></td>
+<td style="width:23%"><div class="h center">THIRDPARTY NUMBER</div><div class="cell center">${esc(v("tracking_number") || "")}</div></td>
 <td style="width:23%"><div class="h center">SENDER'S SIGNATURE</div><div class="cell"></div></td>
 <td style="width:18%"><div class="h center">DATE</div><div class="cell center">7/1/2026 11:38:30 AM</div></td>
 <td style="width:20%"><div class="h center">SERVICE TYPE</div><div class="cell center">${esc(service)}</div></td>
