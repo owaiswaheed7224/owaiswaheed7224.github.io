@@ -1740,6 +1740,7 @@ const codCurrencies = [
 
         const invoiceRows = getInvoiceRows();
         const weightRows = getWeightRows();
+        const totalPcs = weightRows.length;
         const esc = escHtml;
         const v = fieldValue;
 
@@ -1859,7 +1860,7 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 .barcode svg{width:90%;height:8.5mm}
 .tiny{font-size:5.5pt}
 .gap{height:1.3mm}
-.copybar{height:7mm;display:grid;grid-template-columns:18% 39% 43%;border:1px solid #222}
+.copybar{height:7mm;display:grid;grid-template-columns:50% 50%;border:1px solid #222}
 .copybar>div{border-right:1px solid #222;display:flex;align-items:center;justify-content:center;font-size:7pt;font-weight:800}
 .copybar>div:last-child{border-right:0}
 .terms-head{height:5.5mm;background:#c3d6e8;border:1px solid #222;text-align:center;padding:1.2mm;font-size:7pt;font-weight:800}
@@ -1893,7 +1894,7 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 <!-- SENDER BOX: ACC label/value stays ABOVE sender address -->
 <tr>
 <td>
-  <div class="h"><span class="n">1</span>Order # <span class="head-value">${esc(v("reference_number") || "")}</span></div>
+  <div class="h"><span class="n">1</span>ACC # <span class="head-value">${esc(v("reference_number") || "")}</span></div>
   <div class="person-box">
     <div class="vertical">SENDER</div>
     <div class="cell"><b>${esc(shipperName)}</b><br>${esc(v("ship_address1") || "")}<br>${esc([v("ship_address2"), v("ship_city"), v("ship_country")].filter(Boolean).join(" "))}${shipperPhone ? "<br>" + esc(shipperPhone) : ""}</div>
@@ -1990,7 +1991,7 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 </table>
 
 <div class="gap"></div>
-<div class="copybar"><div>NO. OF PKG<br>0 0 X 0</div><div>SENDER COPY</div><div>Help Line : +92-3221763756 </div></div>
+<div class="copybar"><div>PRINT NAME<br>${esc(totalPcs)} PCS</div><div>SENDER COPY</div></div>
 
 <table style="margin-top:1.3mm">
 <tr style="height:15mm">
