@@ -91,6 +91,13 @@
     <a href="searching.html" class="client-feature" id="searchBook">🔍 Searching Booking</a>
     <a href="status.html" class="client-feature" id="trackShip">🚚 Track Shipments</a>
     <a href="rateinquiry.html" class="client-feature" id="rateInq">💰 Rate Inquiry</a>
+    <div class="client-feature" id="manifestMenu" style="margin:5px 0;">
+      <a href="manifest.html" style="display:block;">📦 Manifest</a>
+      <div style="padding-left:12px;">
+        <a href="manifest.html#create" style="font-size:14px;padding:8px 12px;">➕ Create Manifest</a>
+        <a href="manifest.html#search" style="font-size:14px;padding:8px 12px;">🔎 Search Manifest</a>
+      </div>
+    </div>
 
     <!-- ✅ Admin Features -->
     <a href="pending.html" class="admin-only">⏳ Pending Signups</a>
@@ -192,7 +199,7 @@ await setPersistence(auth, browserSessionPersistence);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data();
-          const features = ["shipBook", "searchBook", "trackShip", "rateInq"];
+          const features = ["shipBook", "searchBook", "trackShip", "rateInq", "manifestMenu"];
           features.forEach(id => {
             document.getElementById(id).style.display = data[id] ? "block" : "none";
           });
