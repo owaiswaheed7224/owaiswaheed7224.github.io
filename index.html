@@ -189,6 +189,208 @@
       font-size:14px;
       margin-bottom:18px;
     }
+
+    /* =========================================================
+       iOS 26 / Liquid Glass style NAVBAR
+       Keeps the existing navbar height and all existing links.
+       ========================================================= */
+    .navbar {
+      position: sticky;
+      top: 10px;
+      z-index: 1000;
+      margin: 10px 14px 0;
+      min-height: 70px;
+      border: 1px solid rgba(255,255,255,.72);
+      border-radius: 22px;
+      background: rgba(255,255,255,.62) !important;
+      box-shadow:
+        0 8px 30px rgba(11,34,54,.10),
+        inset 0 1px 0 rgba(255,255,255,.90);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      transition: box-shadow .25s ease, background .25s ease;
+    }
+
+    .navbar::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      background: linear-gradient(
+        120deg,
+        rgba(255,255,255,.48),
+        rgba(255,255,255,.08) 42%,
+        rgba(255,255,255,.28)
+      );
+    }
+
+    .navbar > .container {
+      position:relative;
+      z-index:1;
+    }
+
+    .navbar-brand {
+      color:#0b2236 !important;
+      font-weight:700;
+      letter-spacing:-.2px;
+    }
+
+    /* Slightly larger logo, without making the navbar taller */
+    .logo-img {
+      height: 58px !important;
+      width: 128px;
+      object-fit: contain;
+      object-position: center;
+      display:block;
+      flex:0 0 auto;
+    }
+
+    .navbar-brand strong {
+      font-size: 1.03rem;
+    }
+
+    .navbar-brand small {
+      font-size: .72rem;
+      white-space: nowrap;
+    }
+
+    .navbar .nav-link {
+      position:relative;
+      color:#0b2236 !important;
+      font-weight:600;
+      border-radius:14px;
+      padding:.58rem .82rem !important;
+      margin:0 2px;
+      transition:
+        color .22s ease,
+        background .22s ease,
+        transform .22s ease,
+        box-shadow .22s ease;
+    }
+
+    .navbar .nav-link:hover,
+    .navbar .nav-link:focus,
+    .navbar .nav-link.active {
+      color:#0d6efd !important;
+      background:rgba(13,110,253,.10);
+      box-shadow:inset 0 0 0 1px rgba(13,110,253,.08);
+      transform:translateY(-1px);
+    }
+
+    /* Track Shipment keeps its original blue identity,
+       but gets the same glass interaction treatment. */
+    .navbar .btn-outline-primary {
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(13,110,253,.78);
+      border-radius:15px;
+      color:#0d6efd;
+      background:rgba(255,255,255,.34);
+      font-weight:700;
+      padding:.58rem .95rem;
+      box-shadow:
+        0 4px 14px rgba(13,110,253,.08),
+        inset 0 1px 0 rgba(255,255,255,.72);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      transition:
+        background .22s ease,
+        color .22s ease,
+        box-shadow .22s ease,
+        transform .22s ease;
+    }
+
+    .navbar .btn-outline-primary:hover,
+    .navbar .btn-outline-primary:focus {
+      color:#fff;
+      background:#0d6efd;
+      border-color:#0d6efd;
+      box-shadow:0 7px 20px rgba(13,110,253,.24);
+      transform:translateY(-1px);
+    }
+
+    /* Login retains its existing blue color, with glass polish */
+    .navbar .btn-primary {
+      border:1px solid rgba(13,110,253,.92);
+      border-radius:15px;
+      padding:.58rem 1.02rem;
+      font-weight:700;
+      box-shadow:
+        0 5px 16px rgba(13,110,253,.20),
+        inset 0 1px 0 rgba(255,255,255,.22);
+      transition:box-shadow .22s ease, transform .22s ease, filter .22s ease;
+    }
+
+    .navbar .btn-primary:hover,
+    .navbar .btn-primary:focus {
+      transform:translateY(-1px);
+      filter:brightness(1.04);
+      box-shadow:0 8px 22px rgba(13,110,253,.28);
+    }
+
+    .navbar-toggler {
+      border:1px solid rgba(11,34,54,.14);
+      border-radius:13px;
+      padding:.48rem .62rem;
+      background:rgba(255,255,255,.42);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.75);
+    }
+
+    .navbar-toggler:focus {
+      box-shadow:0 0 0 .18rem rgba(13,110,253,.12);
+    }
+
+    @media (max-width: 991.98px) {
+      .navbar {
+        top:6px;
+        margin:6px 8px 0;
+        min-height:66px;
+        border-radius:19px;
+      }
+
+      .navbar-collapse {
+        margin-top:10px;
+        padding:8px;
+        border-radius:17px;
+        background:rgba(255,255,255,.58);
+        border:1px solid rgba(255,255,255,.68);
+        backdrop-filter:blur(20px) saturate(175%);
+        -webkit-backdrop-filter:blur(20px) saturate(175%);
+      }
+
+      .navbar-nav {
+        align-items:stretch !important;
+      }
+
+      .navbar .nav-link,
+      .navbar .btn-outline-primary,
+      .navbar .btn-primary {
+        margin:3px 0;
+        width:100%;
+        text-align:center;
+      }
+
+      .navbar .nav-item.me-lg-2 {
+        margin-bottom:4px !important;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .navbar-brand > div {
+        display:none;
+      }
+
+      .logo-img {
+        width:112px;
+        height:55px !important;
+      }
+
+      .navbar {
+        border-radius:18px;
+      }
+    }
+
   </style>
 
 </head>
@@ -548,7 +750,7 @@
 
       function restartAutoSlide() {
         clearInterval(timer);
-        timer = setInterval(nextSlide, 3000);
+        timer = setInterval(nextSlide, 15000);
       }
 
       nextBtn.addEventListener('click', () => {
@@ -568,7 +770,7 @@
         });
       });
 
-      // First image stays visible for 3 seconds, then the second slides right-to-left.
+      // Each image stays visible for 15 seconds, then the next slide moves right-to-left.
       restartAutoSlide();
     })();
   </script>
