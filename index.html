@@ -15,18 +15,86 @@
     }
 
     .hero{
-      background:url('worldwide-transportation.jpg') center/cover no-repeat;
       color:#fff;
       text-align:center;
       padding:8rem 2rem;
       position:relative;
+      overflow:hidden;
+      background:#0b2236;
     }
 
+    /* Hero image slider: worldwide first, then transportation after 3 seconds */
     .hero::before{
       content:"";
       position:absolute;
       inset:0;
+      background-image:url('worldwide-transportation.jpg.png');
+      background-position:center;
+      background-size:cover;
+      background-repeat:no-repeat;
+      animation:heroSlide 6s infinite;
+      z-index:0;
+    }
+
+    @keyframes heroSlide{
+      0%, 45%{
+        background-image:url('worldwide-transportation.jpg.png');
+        transform:translateX(0);
+      }
+      50%, 95%{
+        background-image:url('transpotation.jpg.png');
+        transform:translateX(0);
+      }
+      100%{
+        background-image:url('worldwide-transportation.jpg.png');
+        transform:translateX(0);
+      }
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:0;
       background:rgba(0,0,0,0.5);
+      z-index:1;
+    }
+
+
+    .hero::before{
+      animation:heroImage 6s infinite;
+      background-image:url('worldwide-transportation.jpg.png');
+      will-change:transform;
+    }
+
+    @keyframes heroImage{
+      0%, 45%{
+        background-image:url('worldwide-transportation.jpg.png');
+        transform:translateX(0);
+        opacity:1;
+      }
+      50%{
+        background-image:url('transpotation.jpg.png');
+        transform:translateX(100%);
+        opacity:1;
+      }
+      50.1%, 95%{
+        background-image:url('transpotation.jpg.png');
+        transform:translateX(0);
+        opacity:1;
+      }
+      100%{
+        background-image:url('worldwide-transportation.jpg.png');
+        transform:translateX(100%);
+        opacity:1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .hero::before{
+        animation:none;
+        background-image:url('worldwide-transportation.jpg.png');
+        transform:none;
+      }
     }
 
     .hero-content{
