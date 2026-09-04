@@ -1586,7 +1586,7 @@ const codCurrencies = [
         const $printButton = $("#printBooking");
 
         const currentAwb = String($("input[name='awb_number']").val() || "").trim();
-        if (!/^500\d{9}$/.test(currentAwb) || currentAwb === "Generating...") {
+        if (!/^500\d{8}$/.test(currentAwb) || currentAwb === "Generating...") {
           alert("AWB number abhi generate nahi hua. Please wait or click New Booking again.");
           return;
         }
