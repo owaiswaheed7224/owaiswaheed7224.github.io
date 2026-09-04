@@ -1374,6 +1374,11 @@ const codCurrencies = [
       // The server uses LockService, so simultaneous bookings still get unique AWBs.
       function generateNextAwb() {
         const $awb = $("input[name='awb_number']");
+
+        // IMPORTANT: this endpoint only READS the next available AWB.
+        // The AWB counter is advanced by Code.gs only after the booking
+        // is successfully written to Google Sheet. Therefore clicking
+        // New Booking repeatedly/reloading the page does not consume numbers.
         $awb.val("Generating...");
 
         $.ajax({
