@@ -15,91 +15,132 @@
     }
 
     .hero{
-      color:#fff;
-      text-align:center;
-      padding:8rem 2rem;
       position:relative;
+      width:100%;
+      height:min(42vw, 520px);
+      min-height:300px;
+      padding:0;
       overflow:hidden;
+      color:#fff;
       background:#0b2236;
     }
 
-    /* Hero image slider: worldwide first, then transportation after 3 seconds */
-    .hero::before{
-      content:"";
+    /* Full-width clear image carousel */
+    .hero-slide{
       position:absolute;
       inset:0;
-      background-image:url('worldwide-transportation.jpg.png');
-      background-position:center;
-      background-size:cover;
-      background-repeat:no-repeat;
-      animation:heroSlide 6s infinite;
-      z-index:0;
-    }
-
-    @keyframes heroSlide{
-      0%, 45%{
-        background-image:url('worldwide-transportation.jpg.png');
-        transform:translateX(0);
-      }
-      50%, 95%{
-        background-image:url('transpotation.jpg.png');
-        transform:translateX(0);
-      }
-      100%{
-        background-image:url('worldwide-transportation.jpg.png');
-        transform:translateX(0);
-      }
-    }
-
-    .hero::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,0.5);
-      z-index:1;
-    }
-
-
-    .hero::before{
-      animation:heroImage 6s infinite;
-      background-image:url('worldwide-transportation.jpg.png');
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center;
+      display:block;
+      transition:transform 0.9s cubic-bezier(.65,0,.35,1);
       will-change:transform;
     }
 
-    @keyframes heroImage{
-      0%, 45%{
-        background-image:url('worldwide-transportation.jpg.png');
-        transform:translateX(0);
-        opacity:1;
-      }
-      50%{
-        background-image:url('transpotation.jpg.png');
-        transform:translateX(100%);
-        opacity:1;
-      }
-      50.1%, 95%{
-        background-image:url('transpotation.jpg.png');
-        transform:translateX(0);
-        opacity:1;
-      }
-      100%{
-        background-image:url('worldwide-transportation.jpg.png');
-        transform:translateX(100%);
-        opacity:1;
-      }
+    .hero-slide.current{
+      transform:translateX(0);
+      z-index:1;
     }
 
-    @media (prefers-reduced-motion: reduce){
-      .hero::before{
-        animation:none;
-        background-image:url('worldwide-transportation.jpg.png');
-        transform:none;
-      }
+    .hero-slide.next{
+      transform:translateX(100%);
+      z-index:2;
+    }
+
+    .hero-slide.previous{
+      transform:translateX(-100%);
+      z-index:0;
     }
 
     .hero-content{
       position:relative;
-      z-index:2;
+      z-index:4;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      padding:2rem;
+      text-shadow:0 2px 5px rgba(0,0,0,.45);
+    }
+
+    /* No dark overlay: image stays clear */
+    .hero::after{
+      display:none;
+    }
+
+    .hero-arrow{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:6;
+      width:48px;
+      height:48px;
+      border:1px solid rgba(255,255,255,.75);
+      border-radius:50%;
+      background:rgba(0,0,0,.22);
+      color:#fff;
+      font-size:30px;
+      line-height:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:.2s ease;
+      backdrop-filter:blur(2px);
+    }
+
+    .hero-arrow:hover{
+      background:rgba(13,110,253,.85);
+      transform:translateY(-50%) scale(1.06);
+    }
+
+    .hero-arrow.left{left:22px;}
+    .hero-arrow.right{right:22px;}
+
+    .hero-dots{
+      position:absolute;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      z-index:6;
+      display:flex;
+      gap:8px;
+    }
+
+    .hero-dot{
+      width:9px;
+      height:9px;
+      padding:0;
+      border:0;
+      border-radius:50%;
+      background:rgba(255,255,255,.65);
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .hero-dot.active{
+      width:25px;
+      border-radius:10px;
+      background:#fff;
+    }
+
+    @media (max-width:768px){
+      .hero{
+        height:58vw;
+        min-height:280px;
+      }
+      .hero-content{
+        padding:1.25rem 3.5rem;
+      }
+      .hero-arrow{
+        width:40px;
+        height:40px;
+        font-size:25px;
+      }
+      .hero-arrow.left{left:10px;}
+      .hero-arrow.right{right:10px;}
     }
 
     .service-card{
@@ -212,28 +253,40 @@
   <!-- HERO -->
 
   <header class="hero">
+    <img class="hero-slide current"
+         src="worldwide-transpotation.jpg.png"
+         alt="Worldwide transportation and air freight">
+    <img class="hero-slide next"
+         src="transpotation.jpg.png"
+         alt="Arham Freight Logistics transportation">
+
+    <button class="hero-arrow left" id="heroPrev" type="button" aria-label="Previous slide">&#10094;</button>
+    <button class="hero-arrow right" id="heroNext" type="button" aria-label="Next slide">&#10095;</button>
+
+    <div class="hero-dots" aria-label="Hero slides">
+      <button class="hero-dot active" type="button" aria-label="Worldwide transportation"></button>
+      <button class="hero-dot" type="button" aria-label="Transportation"></button>
+    </div>
+
     <div class="hero-content">
+      <h1 class="display-5">
+        Reliable Freight & Logistics
+      </h1>
 
-  <h1 class="display-5">
-    Reliable Freight & Logistics
-  </h1>
+      <p class="lead">
+        Domestic & international shipping — warehousing & cargo handling with fast, secure service.
+      </p>
 
-  <p class="lead">
-    Domestic & international shipping — warehousing & cargo handling with fast, secure service.
-  </p>
+      <div class="d-flex gap-2 justify-content-center">
+        <a href="#contact" class="btn btn-primary">
+          Get a Quote
+        </a>
 
-  <div class="d-flex gap-2 justify-content-center">
-    <a href="#contact" class="btn btn-primary">
-      Get a Quote
-    </a>
-
-    <a href="#services" class="btn btn-outline-light">
-      Our Services
-    </a>
-  </div>
-
-</div>
-
+        <a href="#services" class="btn btn-outline-light">
+          Our Services
+        </a>
+      </div>
+    </div>
   </header>
 
   <!-- SERVICES -->
@@ -447,6 +500,77 @@
   <script>
     document.getElementById('year').innerText =
       new Date().getFullYear();
+  </script>
+
+
+  <script>
+    (() => {
+      const slides = document.querySelectorAll('.hero-slide');
+      const dots = document.querySelectorAll('.hero-dot');
+      const prevBtn = document.getElementById('heroPrev');
+      const nextBtn = document.getElementById('heroNext');
+
+      let current = 0;
+      let timer;
+
+      function showSlide(target, direction = 1) {
+        if (target === current) return;
+
+        const oldSlide = slides[current];
+        const newSlide = slides[target];
+
+        // Put the incoming slide on the correct side, then slide it into place.
+        newSlide.style.transition = 'none';
+        newSlide.style.transform = `translateX(${direction > 0 ? 100 : -100}%)`;
+        newSlide.style.zIndex = '2';
+        oldSlide.style.zIndex = '1';
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            newSlide.style.transition = 'transform 0.9s cubic-bezier(.65,0,.35,1)';
+            oldSlide.style.transition = 'transform 0.9s cubic-bezier(.65,0,.35,1)';
+            newSlide.style.transform = 'translateX(0)';
+            oldSlide.style.transform = `translateX(${direction > 0 ? -100 : 100}%)`;
+          });
+        });
+
+        current = target;
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === current));
+      }
+
+      function nextSlide() {
+        showSlide((current + 1) % slides.length, 1);
+      }
+
+      function prevSlide() {
+        showSlide((current - 1 + slides.length) % slides.length, -1);
+      }
+
+      function restartAutoSlide() {
+        clearInterval(timer);
+        timer = setInterval(nextSlide, 3000);
+      }
+
+      nextBtn.addEventListener('click', () => {
+        nextSlide();
+        restartAutoSlide();
+      });
+
+      prevBtn.addEventListener('click', () => {
+        prevSlide();
+        restartAutoSlide();
+      });
+
+      dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => {
+          showSlide(i, i > current ? 1 : -1);
+          restartAutoSlide();
+        });
+      });
+
+      // First image stays visible for 3 seconds, then the second slides right-to-left.
+      restartAutoSlide();
+    })();
   </script>
 
   <!-- BOOTSTRAP -->
