@@ -146,11 +146,6 @@
       background: #eef5ff;
     }
 
-    .details-card {
-      display: none;
-      margin-top: 20px;
-    }
-
     .detail-label {
       color: #6c757d;
       font-size: 12px;
@@ -432,7 +427,8 @@
                 <th>Tracking Number</th>
                 <th>Shipper</th>
                 <th>Receiver</th>
-                <th>Origin</th>
+                <th>COD / NON COD</th>
+                <th>Reference Number</th>
                 <th>Destination</th>
                 <th>Service</th>
                 <th>Pieces</th>
@@ -444,21 +440,13 @@
             </thead>
             <tbody id="resultsBody">
               <tr>
-                <td colspan="14" class="text-center py-4 text-muted">
+                <td colspan="15" class="text-center py-4 text-muted">
                   Loading bookings...
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-
-    <!-- Full Details -->
-    <div class="results-card details-card" id="detailsCard">
-      <div class="card-header-blue">📦 Booking Details</div>
-      <div class="card-body">
-        <div class="row" id="detailsBody"></div>
       </div>
     </div>
   </main>
@@ -545,8 +533,6 @@
     const resultsBody = document.getElementById("resultsBody");
     const resultsTitle = document.getElementById("resultsTitle");
     const statusBox = document.getElementById("statusBox");
-    const detailsCard = document.getElementById("detailsCard");
-    const detailsBody = document.getElementById("detailsBody");
     const selectAll = document.getElementById("selectAll");
     const voidModal = document.getElementById("voidModal");
     const voidModalMessage = document.getElementById("voidModalMessage");
@@ -579,7 +565,7 @@
       selectAll.indeterminate = false;
       resultsBody.innerHTML = `
         <tr>
-          <td colspan="14" class="text-center py-4">
+          <td colspan="15" class="text-center py-4">
             <div class="spinner-border text-primary me-2"></div>
             Searching...
           </td>
@@ -589,6 +575,16 @@
     function formatValue(value) {
       if (value === null || value === undefined || value === "") return "-";
       return escapeHtml(value);
+    }
+
+    function formatCod(record) {
+      const status = String(record?.cod_status || "").trim().toUpperCase();
+      const amount = String(record?.cod_amount ?? "").trim();
+      const currency = String(record?.cod_currency ?? "").trim().toLowerCase();
+
+      if (status !== "COD" || amount === "") return "0";
+
+      return escapeHtml(amount + (currency ? " " + currency : ""));
     }
 
     function renderStatusBadge(statusText) {
@@ -809,13 +805,10 @@
 
     function renderResults(records, title) {
       resultsTitle.textContent = title;
-      detailsCard.style.display = "none";
-      detailsBody.innerHTML = "";
-
       if (!records || records.length === 0) {
         resultsBody.innerHTML = `
           <tr>
-            <td colspan="14" class="text-center py-4 text-danger fw-bold">
+            <td colspan="15" class="text-center py-4 text-danger fw-bold">
               ❌ Booking not found / No records found
             </td>
           </tr>`;
@@ -834,21 +827,22 @@
                    title="Select shipment"
                    onchange="toggleRowSelection(${index}, this.checked)">
           </td>
-          <td onclick="showDetails(${index})">${formatValue(r.date)}</td>
-          <td onclick="showDetails(${index})" class="fw-bold text-primary">
+          <td onclick="void(0)">${formatValue(r.date)}</td>
+          <td onclick="void(0)" class="fw-bold text-primary">
             ${formatValue(r.awb_number)}
             ${voided ? '<span class="void-badge">VOIDED</span>' : ''}
           </td>
-          <td onclick="showDetails(${index})" class="fw-bold text-success">${formatValue(r.tracking_number)}</td>
-          <td onclick="showDetails(${index})">${formatValue(r.shipper_name || r.shipper_company)}</td>
-          <td onclick="showDetails(${index})">${formatValue(r.receiver_attention || r.receiver_company)}</td>
-          <td onclick="showDetails(${index})">${formatValue(r.ship_city)}</td>
-          <td onclick="showDetails(${index})">${formatValue(r.receiver_city)}</td>
-          <td onclick="showDetails(${index})">${formatValue(r.service)}</td>
-          <td onclick="showDetails(${index})">${formatValue(r.pieces)}</td>
-          <td onclick="showDetails(${index})">${formatValue(r.weight)}</td>
-          <td onclick="showDetails(${index})">${formatValue(r.total)}</td>
-          <td onclick="showDetails(${index})">${renderStatusBadge(currentStatus)}</td>
+          <td onclick="void(0)" class="fw-bold text-success">${formatValue(r.tracking_number)}</td>
+          <td onclick="void(0)">${formatValue(r.shipper_name || r.shipper_company)}</td>
+          <td onclick="void(0)">${formatValue(r.receiver_attention || r.receiver_company)}</td>
+          <td onclick="void(0)">${formatCod(r)}</td>
+          <td onclick="void(0)">${formatValue(r.reference_number)}</td>
+          <td onclick="void(0)">${formatValue(r.receiver_city)}</td>
+          <td onclick="void(0)">${formatValue(r.service)}</td>
+          <td onclick="void(0)">${formatValue(r.pieces)}</td>
+          <td onclick="void(0)">${formatValue(r.weight)}</td>
+          <td onclick="void(0)">${formatValue(r.total)}</td>
+          <td onclick="void(0)">${renderStatusBadge(currentStatus)}</td>
           <td>
             <div class="d-flex gap-1">
               <button type="button" class="btn btn-sm btn-outline-primary action-btn"
@@ -892,21 +886,6 @@
 
       window.currentRecords = records;
     }
-
-    window.showDetails = function(index) {
-      const r = window.currentRecords[index];
-      if (!r) return;
-
-      detailsBody.innerHTML = fields.map(([label, key]) => `
-        <div class="col-md-4 detail-item">
-          <div class="detail-label">${escapeHtml(label)}</div>
-          <div class="detail-value">${formatValue(r[key])}</div>
-        </div>
-      `).join("");
-
-      detailsCard.style.display = "block";
-      detailsCard.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
 
     async function searchBookings() {
       const awb = awbInput.value.trim();
@@ -964,7 +943,7 @@
         console.error(error);
         resultsBody.innerHTML = `
           <tr>
-            <td colspan="14" class="text-center py-4 text-danger fw-bold">
+            <td colspan="15" class="text-center py-4 text-danger fw-bold">
               ❌ Unable to connect with Google Sheet.
             </td>
           </tr>`;
