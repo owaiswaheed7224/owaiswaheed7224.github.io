@@ -362,7 +362,7 @@
             <label>Date</label>
             <input type="date" name="date" required>
             <label>AWB Number</label>
-            <input type="text" name="awb_number" required>
+            <input type="text" name="awb_number" required readonly autocomplete="off">
             <label>Tracking Number</label>
             <input type="text" name="tracking_number">
             <label>Reference Number</label>
@@ -1338,10 +1338,19 @@ const codCurrencies = [
       });
 
       // Select2.
+      function startsWithMatcher(params, data) {
+        if ($.trim(params.term || "") === "") return data;
+        if (!data || !data.text) return null;
+        const term = $.trim(params.term).toLowerCase();
+        const text = String(data.text).toLowerCase();
+        return text.indexOf(term) === 0 ? data : null;
+      }
+
       $(".country-select").select2({
         placeholder: "Select country",
         allowClear: true,
-        width: "100%"
+        width: "100%",
+        matcher: startsWithMatcher
       });
 
       $(".service-select").select2({
@@ -1354,11 +1363,44 @@ const codCurrencies = [
       $("#codCurrency").select2({
         placeholder: "Select COD currency",
         allowClear: true,
-        width: "100%"
+        width: "100%",
+        matcher: startsWithMatcher
       });
 
       const $form = $("#bookingForm");
       const $toggleEdit = $("#toggleEdit");
+
+      // Generate the next live AWB from Google Apps Script.
+      // The server uses LockService, so simultaneous bookings still get unique AWBs.
+      function generateNextAwb() {
+        const $awb = $("input[name='awb_number']");
+        $awb.val("Generating...");
+
+        $.ajax({
+          url: $form.attr("action"),
+          method: "GET",
+          data: { action: "nextawb" },
+          dataType: "jsonp",
+          cache: false,
+          timeout: 15000,
+          success: function (res) {
+            if (res && res.success && res.awb) {
+              $awb.val(String(res.awb));
+              $awb.prop("readonly", true);
+            } else {
+              $awb.val("");
+              alert((res && res.message) ? res.message : "AWB number generate nahi ho saka. Please try again.");
+            }
+          },
+          error: function () {
+            $awb.val("");
+            alert("AWB number generate nahi ho saka. Internet/Apps Script connection check karke New Booking dobara click karein.");
+          }
+        });
+      }
+
+      // AWB is always system-generated and cannot be manually changed.
+      $("input[name='awb_number']").prop("readonly", true);
 
       // Default date = today.
       setToday();
@@ -1478,6 +1520,9 @@ const codCurrencies = [
           resetWeightRows();
           setToday();
 
+          // Generate a fresh live AWB starting from 50000000002.
+          generateNextAwb();
+
           $form.removeClass("readonly");
 
           // Show Cancel + Submit only after New Booking is clicked.
@@ -1540,6 +1585,12 @@ const codCurrencies = [
         const $loading = $("#bookingLoading");
         const $printButton = $("#printBooking");
 
+        const currentAwb = String($("input[name='awb_number']").val() || "").trim();
+        if (!/^500\d{9}$/.test(currentAwb) || currentAwb === "Generating...") {
+          alert("AWB number abhi generate nahi hua. Please wait or click New Booking again.");
+          return;
+        }
+
         // If Manual / Custom Service is selected, put its typed value
         // into the normal "service" field expected by Google Apps Script.
         const $service = $(".service-select");
@@ -1566,7 +1617,6 @@ const codCurrencies = [
         // COD validation: COD must have a valid amount before submission.
         const codStatus = String($("#codStatus").val() || "").trim().toUpperCase();
         const codAmountRaw = String($("#codAmount").val() || "").trim();
-        const codCurrency = String($("#codCurrency").val() || "").trim().toUpperCase();
         const codCurrency = String($("#codCurrency").val() || "").trim().toUpperCase();
 
         if (!codStatus) {
