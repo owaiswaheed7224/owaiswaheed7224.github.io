@@ -1893,19 +1893,19 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 <!-- SENDER BOX: ACC label/value stays ABOVE sender address -->
 <tr>
 <td>
-  <div class="h"><span class="n">1</span>ACC # <span class="head-value">1062</span></div>
+  <div class="h"><span class="n">1</span>ACC # <span class="head-value">${esc(v("reference_number") || "")}</span></div>
   <div class="person-box">
     <div class="vertical">SENDER</div>
-    <div class="cell"><b>HASSAN SHAKEEL</b><br>Street 4 3/215<br>Karachi Pakistan<br>0</div>
+    <div class="cell"><b>${esc(shipperName)}</b><br>${esc(v("ship_address1") || "")}<br>${esc([v("ship_address2"), v("ship_city"), v("ship_country")].filter(Boolean).join(" "))}${shipperPhone ? "<br>" + esc(shipperPhone) : ""}</div>
   </div>
 </td>
 
 <!-- RECEIVER BOX: AWB label/value stays ABOVE receiver address -->
 <td>
-  <div class="h"><span class="n">4</span>AWB# <span class="head-value">50000000001</span></div>
+  <div class="h"><span class="n">4</span>AWB# <span class="head-value">${esc(v("tracking_number") || awb || "")}</span></div>
   <div class="person-box">
     <div class="vertical">RECEIVER</div>
-    <div class="cell"><b>Gul Pathan</b><br>DXB UAE DXB UAE<br>0 DUBAI UAE<br>9710000000000</div>
+    <div class="cell"><b>${esc(receiverName)}</b><br>${esc(receiverAddress)}<br>${esc([v("receiver_city"), v("receiver_country"), receiverZip].filter(Boolean).join(" "))}<br>${esc(receiverPhone)}</div>
   </div>
 </td>
 
@@ -1913,7 +1913,7 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 <td rowspan="1">
   <div class="h"><span class="n">7</span>TYPE <span class="head-value">NON DOX</span></div>
   <div class="qr-header"><span class="n">8</span>QR CODE</div>
-  <div class="qrbox"><div class="qr"></div><b class="tiny">60000000001</b></div>
+  <div class="qrbox"><div class="qr"></div><b class="tiny">${esc(v("tracking_number") || awb || "")}</b></div>
   <div class="tiny center">NON DOC</div>
   <div class="barcode">
     <div class="tiny"><b>BAR CODE SECTION</b></div>
@@ -1954,14 +1954,14 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 </td>
 <td>
 <div class="h"><span class="n">9</span>SIZE &amp; WEIGHT</div>
-<table class="inner"><tr><th>PIECES</th><th>WEIGHT</th><th>CHRG WEIGHT</th></tr><tr><td>1</td><td>1.00</td><td>1.00</td></tr></table>
+<table class="inner"><tr><th>PIECES</th><th>WEIGHT</th><th>CHRG WEIGHT</th></tr><tr><td>${esc(totalQty || "0")}</td><td>${esc(totalWeight || "0")}</td><td>${esc(Math.max(parseFloat(totalWeight)||0, parseFloat(totalVol)||0).toFixed(2))}</td></tr></table>
 </td>
 </tr>
 
 <tr style="height:24mm">
 <td>
 <div class="h"><span class="n">6</span>RECEIVED FOR EXPORT</div>
-<div class="cell center"><b>DATE &amp; TIME</b><br>2026-09-04</div>
+<div class="cell center"><b>DATE &amp; TIME</b><br>${esc(date)}</div>
 </td>
 <td>
 <div class="h center">SHIPMENT INFORMATION</div>
@@ -1969,7 +1969,7 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 </td>
 <td>
 <div class="h center">DIMENSION IN CM</div>
-<table class="inner"><tr><th>S#</th><th>LENGTH</th><th>HEIGHT</th><th>WIDTH</th><th>VOL</th></tr><tr><td>1</td><td>15</td><td>10</td><td>15</td><td>0.45</td></tr><tr><td colspan="5">Total Volumetric weight: 0.45</td></tr></table>
+<table class="inner"><tr><th>S#</th><th>LENGTH</th><th>HEIGHT</th><th>WIDTH</th><th>VOL</th></tr>${weightRows.length ? weightRows.map(function(r,i){ return "<tr><td>"+(i+1)+"</td><td>"+esc(r.length||0)+"</td><td>"+esc(r.height||0)+"</td><td>"+esc(r.width||0)+"</td><td>"+esc(r.volumetric||0)+"</td></tr>"; }).join("") : "<tr><td>1</td><td>0</td><td>0</td><td>0</td><td>"+esc(totalVol||0)+"</td></tr>"}<tr><td colspan="5">Total Volumetric weight: ${esc(totalVol || "0")}</td></tr></table>
 </td>
 </tr>
 
@@ -1980,11 +1980,11 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 </td>
 <td>
 <div class="h center">FULL DESCRIPTION OF CONTENT</div>
-<div class="cell">Lady suits</div>
+<div class="cell">${invoiceRows.map(r => esc(r.description || "")).filter(Boolean).join("<br>")}</div>
 </td>
 <td>
 <div class="h center">PAYMENT'S DETAILS</div>
-<table class="inner"><tr><th>INS VAL</th><td>0</td><th>PAYABLE</th><td>PKR 3500</td></tr><tr><th>TOTAL</th><td>PKR 3500</td><th>BALANCE</th><td>PKR 3500</td></tr><tr><th>COD</th><td>NON COD</td><th>COD AMOUNT</th><td>--</td></tr></table>
+<table class="inner"><tr><th>INS VAL</th><td>${esc(v("insurance") || "0")}</td><th>PAYABLE</th><td>${esc(payable || "0")}</td></tr><tr><th>TOTAL</th><td>${esc(total || "0")}</td><th>BALANCE</th><td>${esc(balance || "0")}</td></tr><tr><th>COD</th><td>${esc(codStatus || "NON COD")}</td><th>COD AMOUNT</th><td>${esc(codAmount ? ((codCurrency ? codCurrency + " " : "") + codAmount) : "--")}</td></tr></table>
 </td>
 </tr>
 </table>
@@ -1994,11 +1994,11 @@ td,th{border:1px solid #222;vertical-align:top;padding:0;overflow:hidden}
 
 <table style="margin-top:1.3mm">
 <tr style="height:15mm">
-<td style="width:23%"><div class="h center">THIRDPARTY NUMBER</div><div class="cell center">40001058335</div></td>
+<td style="width:23%"><div class="h center">THIRDPARTY NUMBER</div><div class="cell center">${esc(ref)}</div></td>
 <td style="width:23%"><div class="h center">SENDER'S SIGNATURE</div><div class="cell"></div></td>
 <td style="width:18%"><div class="h center">DATE</div><div class="cell center">7/1/2026 11:38:30 AM</div></td>
-<td style="width:20%"><div class="h center">SERVICE TYPE</div><div class="cell center">UK DPD (EXPRESS)</div></td>
-<td style="width:16%"><div class="h center">ORIGIN</div><div class="cell center bold" style="font-size:15pt">KHI</div></td>
+<td style="width:20%"><div class="h center">SERVICE TYPE</div><div class="cell center">${esc(service)}</div></td>
+<td style="width:16%"><div class="h center">ORIGIN</div><div class="cell center bold" style="font-size:15pt">${esc(v("ship_city") || "")}</div></td>
 </tr>
 </table>
 
