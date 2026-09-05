@@ -33,9 +33,40 @@
   .empty{padding:35px;text-align:center;color:#6b7280}
   .search-awb{max-width:310px}
   .small-muted{font-size:12px;color:#6b7280}
+
+  /* Global working/loading indicator */
+  #workingOverlay{
+    position:fixed; inset:0; z-index:99999; display:none;
+    align-items:center; justify-content:center;
+    background:rgba(255,255,255,.72); backdrop-filter:blur(2px);
+  }
+  #workingOverlay.show{display:flex}
+  .working-box{
+    min-width:240px; text-align:center; background:#fff;
+    border-radius:14px; padding:22px 28px;
+    box-shadow:0 12px 35px rgba(0,0,0,.18);
+  }
+  .working-spinner{
+    width:42px;height:42px;border:4px solid #dbeafe;
+    border-top-color:#0d6efd;border-radius:50%;
+    animation:manifestSpin .8s linear infinite;margin:0 auto 12px;
+  }
+  @keyframes manifestSpin{to{transform:rotate(360deg)}}
+  .working-text{font-weight:600;color:#1f2937}
+  .working-sub{font-size:12px;color:#6b7280;margin-top:4px}
+
 </style>
 </head>
 <body>
+
+<div id="workingOverlay" aria-live="polite" aria-busy="true">
+  <div class="working-box">
+    <div class="working-spinner"></div>
+    <div class="working-text" id="workingText">Working...</div>
+    <div class="working-sub">Please wait</div>
+  </div>
+</div>
+
 
 <div class="sidebar">
   <div class="logo-box"><img src="Logo.png" alt="Company Logo"></div>
@@ -140,19 +171,33 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 /*
-  IMPORTANT:
-  Paste the same Google Apps Script Web App /exec URL that your
-  existing booking/searching/status pages use.
+  Manifest page — fixed edit navigation + global loading indicator.
 */
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwFGbq2qQw_wXx1vKKry5rJPL6TlPYYUMJMyOpoCM7T67TyfKta9t97wvOCkjdlC2_B/exec";
 
 const $ = id => document.getElementById(id);
+let isEditMode = false;
+let editManifestNumber = "";
+let loadingDepth = 0;
+
+function showWorking(message="Working..."){
+  loadingDepth++;
+  $("workingText").textContent = message;
+  $("workingOverlay").classList.add("show");
+}
+function hideWorking(){
+  loadingDepth = Math.max(0, loadingDepth - 1);
+  if(loadingDepth === 0) $("workingOverlay").classList.remove("show");
+}
+function runWithLoading(message, fn){
+  showWorking(message);
+  return Promise.resolve().then(fn).finally(hideWorking);
+}
 
 function isoDate(d){
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return x.toISOString().slice(0,10);
 }
-
 function setLast7Days(){
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -160,25 +205,29 @@ function setLast7Days(){
   $("startDate").value = isoDate(start);
   $("endDate").value = isoDate(today);
 }
-
 function esc(v){
   return String(v ?? "").replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[c]));
 }
-
-function api(params){
+async function api(params, loadingMessage="Working..."){
   const url = new URL(WEB_APP_URL);
   Object.entries(params).forEach(([k,v]) => {
     if(v !== undefined && v !== null && v !== "") url.searchParams.set(k,v);
   });
-  return fetch(url.toString(), {method:"GET", cache:"no-store"}).then(r => r.json());
+  showWorking(loadingMessage);
+  try{
+    const response = await fetch(url.toString(), {method:"GET", cache:"no-store"});
+    if(!response.ok) throw new Error("Server request failed.");
+    return await response.json();
+  } finally {
+    hideWorking();
+  }
 }
 
 function selectedRows(){
   return [...document.querySelectorAll(".shipment-check:checked")];
 }
-
 function updateSelection(){
   const rows = selectedRows();
   let weight = 0;
@@ -186,7 +235,6 @@ function updateSelection(){
   $("selectedCount").textContent = rows.length;
   $("selectedWeight").textContent = weight.toFixed(2);
 }
-
 function renderShipments(records){
   const body = $("shipmentBody");
   body.innerHTML = "";
@@ -224,17 +272,15 @@ async function loadShipments(){
     startDate:$("startDate").value,
     endDate:$("endDate").value,
     awb:$("awbSearch").value.trim()
-  });
-  if(!result.success) throw new Error(result.message || "Unable to load shipments. Please check Google Apps Script manifest backend.");
+  }, "Loading shipments...");
+  if(!result.success) throw new Error(result.message || "Unable to load shipments.");
   renderShipments(result.records || []);
 }
-
-let isEditMode = false;
-let editManifestNumber = "";
 
 async function loadEditManifest(){
   const raw = sessionStorage.getItem("manifestEditData");
   if(!raw) return false;
+
   let data;
   try { data = JSON.parse(raw); } catch(e) { return false; }
   if(!data || !data.manifest_number) return false;
@@ -247,7 +293,10 @@ async function loadEditManifest(){
   $("masterNumber").value = data.master_number || "";
   $("createManifestBtn").textContent = "💾 Update Manifest";
 
-  const result = await api({action:"manifestdetail",manifestNumber:data.manifest_number});
+  const result = await api(
+    {action:"manifestdetail",manifestNumber:data.manifest_number},
+    "Loading manifest..."
+  );
   if(!result.success) throw new Error(result.message || "Manifest details not found.");
 
   renderShipments(result.shipments || []);
@@ -280,7 +329,11 @@ async function createManifest(){
   };
   if(isEditMode) payload.manifestNumber = editManifestNumber;
 
-  const result = await api(payload);
+  const result = await api(
+    payload,
+    isEditMode ? "Updating manifest..." : "Creating manifest..."
+  );
+
   if(!result.success){
     alert(result.message || "Manifest could not be saved.");
     return;
@@ -302,23 +355,18 @@ async function createManifest(){
   await loadShipments();
 }
 
-
-
 $("searchShipmentsBtn").addEventListener("click", async () => {
   try { await loadShipments(); } catch(e){ alert(e.message); }
 });
-
 $("resetBtn").addEventListener("click", async () => {
   setLast7Days();
   $("awbSearch").value = "";
   try { await loadShipments(); } catch(e){ alert(e.message); }
 });
-
 $("masterCheck").addEventListener("change", e => {
   document.querySelectorAll(".shipment-check").forEach(x => x.checked = e.target.checked);
   updateSelection();
 });
-
 $("selectAllBtn").addEventListener("click", () => {
   const checks = document.querySelectorAll(".shipment-check");
   const allChecked = checks.length && [...checks].every(x => x.checked);
@@ -326,28 +374,28 @@ $("selectAllBtn").addEventListener("click", () => {
   $("masterCheck").checked = !allChecked;
   updateSelection();
 });
-
 $("createManifestBtn").addEventListener("click", async () => {
   try { await createManifest(); } catch(e){ alert(e.message); }
 });
 
-
-
+/* IMPORTANT: Sidebar navigation must navigate normally.
+   Previously the Create Manifest link was prevented and only scrolled
+   the current page, which made the edit page appear stuck. */
 $("manifestToggle").addEventListener("click", () => {
   $("manifestSubmenu").classList.toggle("show");
 });
 
-
-$("createManifestLink").addEventListener("click", e => {
-  e.preventDefault();
-  $("createSection").scrollIntoView({behavior:"smooth"});
+/* Do NOT preventDefault on sidebar links. */
+$("createManifestLink").addEventListener("click", () => {
+  sessionStorage.removeItem("manifestEditData");
 });
-
-
+$("searchManifestLink").addEventListener("click", () => {
+  sessionStorage.removeItem("manifestEditData");
+});
 
 (async function init(){
   if(WEB_APP_URL.includes("PASTE_YOUR_EXISTING")){
-    alert("Manifest page is ready, but first paste your existing Google Apps Script Web App /exec URL into WEB_APP_URL.");
+    alert("Please paste your Google Apps Script Web App /exec URL into WEB_APP_URL.");
     return;
   }
   setLast7Days();
@@ -362,7 +410,9 @@ $("createManifestLink").addEventListener("click", e => {
 
 <script>
 document.getElementById("navbarLogout")?.addEventListener("click", async () => {
+  showWorking("Logging out...");
   try {
+    sessionStorage.removeItem("manifestEditData");
     if (typeof firebase !== "undefined" && firebase.auth) {
       await firebase.auth().signOut();
     }
