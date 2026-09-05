@@ -73,6 +73,25 @@
     .navbar-custom .nav-link, .navbar-custom .dropdown-toggle { color: #fff; }
     .navbar-custom .dropdown-menu { right: 0; left: auto; }
 
+    /* Sidebar expandable groups */
+    .sidebar-group { margin: 5px 0; }
+    .sidebar-group > .group-toggle {
+      cursor: pointer;
+      margin: 0;
+    }
+    .sidebar-group .submenu {
+      display: none;
+      padding-left: 12px;
+    }
+    .sidebar-group.open .submenu {
+      display: block;
+    }
+    .sidebar-group .submenu a {
+      font-size: 14px;
+      padding: 8px 12px;
+      margin: 2px 0;
+    }
+
     /* Hide Admin and Client features initially */
     .admin-only, .client-feature { display: none; }
   </style>
@@ -87,21 +106,32 @@
     <a href="dashboard.html">🏠 Dashboard</a>
 
     <!-- ✅ Client Features -->
-    <a href="https://owaiswaheed7224.github.io/booking.html" class="client-feature" id="shipBook">📦 Shipment Booking</a>
-    <a href="searching.html" class="client-feature" id="searchBook">🔍 Searching Booking</a>
+    <div class="client-feature sidebar-group" id="shipmentGroup">
+      <a href="javascript:void(0)" class="group-toggle">📦 Shipments</a>
+      <div class="submenu">
+        <a href="https://owaiswaheed7224.github.io/booking.html">➕ Shipment Booking</a>
+        <a href="searching.html">🔍 Searching Booking</a>
+      </div>
+    </div>
     <a href="status.html" class="client-feature" id="trackShip">🚚 Track Shipments</a>
     <a href="rateinquiry.html" class="client-feature" id="rateInq">💰 Rate Inquiry</a>
-    <div class="client-feature manifest-menu" id="manifestMenu" style="margin:5px 0;">
-      <a href="#" id="manifestToggle" style="display:block;">📦 Manifest <span style="float:right;">▸</span></a>
-      <div id="manifestSubmenu" style="display:none;padding-left:12px;">
-        <a href="manifest.html#create" style="font-size:14px;padding:8px 12px;">➕ Create Manifest</a>
-        <a href="manifest.html#search" style="font-size:14px;padding:8px 12px;">🔎 Search Manifest</a>
+
+    <div class="client-feature sidebar-group" id="manifestMenu">
+      <a href="javascript:void(0)" class="group-toggle">📦 Manifest</a>
+      <div class="submenu">
+        <a href="manifest.html#create">➕ Create Manifest</a>
+        <a href="manifest.html#search">🔎 Search Manifest</a>
       </div>
     </div>
 
     <!-- ✅ Admin Features -->
-    <a href="pending.html" class="admin-only">⏳ Pending Signups</a>
-    <a href="approved.html" class="admin-only">✅ Approved Signups</a>
+    <div class="admin-only sidebar-group" id="signupGroup">
+      <a href="javascript:void(0)" class="group-toggle">👤 Signup Approvals</a>
+      <div class="submenu">
+        <a href="pending.html">⏳ Pending Signups</a>
+        <a href="approved.html">✅ Approved Signups</a>
+      </div>
+    </div>
     <a href="accountlist.html" class="admin-only">📃 Account List</a>
     <a href="manageclients.html" class="admin-only">👥 Manage Clients</a>
   </div>
@@ -208,6 +238,15 @@ await setPersistence(auth, browserSessionPersistence);
     });
 
 
+    // Expand / collapse sidebar groups
+    document.querySelectorAll(".sidebar-group .group-toggle").forEach(toggle => {
+      toggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        const group = toggle.closest(".sidebar-group");
+        group.classList.toggle("open");
+      });
+    });
+
     // Sidebar active item
     // Works with both relative links (searching.html) and full URLs
     // (for example the GitHub Pages booking.html link).
@@ -240,28 +279,6 @@ await setPersistence(auth, browserSessionPersistence);
         }
         document.querySelectorAll(".sidebar a[href]").forEach(item => item.classList.remove("active"));
         link.classList.add("active");
-      });
-    });
-
-    // Manifest submenu: show Create/Search only after clicking Manifest.
-    const manifestToggle = document.getElementById("manifestToggle");
-    const manifestSubmenu = document.getElementById("manifestSubmenu");
-
-    manifestToggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      const isOpen = manifestSubmenu.style.display === "block";
-      manifestSubmenu.style.display = isOpen ? "none" : "block";
-      manifestToggle.querySelector("span").textContent = isOpen ? "▸" : "▾";
-      manifestToggle.classList.toggle("active", !isOpen);
-    });
-
-    // Keep submenu open when Create/Search Manifest is selected.
-    document.querySelectorAll("#manifestSubmenu a").forEach(link => {
-      link.addEventListener("click", () => {
-        manifestSubmenu.style.display = "block";
-        manifestToggle.querySelector("span").textContent = "▾";
-        document.querySelectorAll(".sidebar a").forEach(item => item.classList.remove("active"));
-        manifestToggle.classList.add("active");
       });
     });
 
