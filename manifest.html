@@ -44,7 +44,6 @@
   <div class="manifest-toggle" id="manifestToggle">📦 Manifest <span style="float:right">▾</span></div>
   <div class="submenu show" id="manifestSubmenu">
     <a href="manifest.html" id="createManifestLink" class="active">➕ Create Manifest</a>
-    <a href="manifest.html#search" id="searchManifestLink">🔎 Search Manifest</a>
   </div>
 
   <a href="https://owaiswaheed7224.github.io/booking.html">📦 Shipment Booking</a>
@@ -127,82 +126,6 @@
       <div class="empty hidden" id="shipmentEmpty">No unmanifested shipments found.</div>
     </div>
   </section>
-
-  <section id="searchSection" class="mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <div>
-        <h3 class="mb-1">Search Manifest</h3>
-        <div class="small-muted">Search by manifest number and/or date range.</div>
-      </div>
-    </div>
-
-    <div class="card p-3 mb-3">
-      <div class="toolbar">
-        <div class="field">
-          <label class="form-label mb-1">Starting Date</label>
-          <input type="date" class="form-control" id="manifestStart">
-        </div>
-        <div class="field">
-          <label class="form-label mb-1">Ending Date</label>
-          <input type="date" class="form-control" id="manifestEnd">
-        </div>
-        <div class="field search-awb">
-          <label class="form-label mb-1">Manifest Number</label>
-          <input type="text" class="form-control" id="manifestSearch" placeholder="e.g. MNF-10001">
-        </div>
-        <button class="btn btn-primary" id="searchManifestBtn">Search</button>
-        <button class="btn btn-outline-secondary" id="resetManifestBtn">Clear</button>
-      </div>
-    </div>
-
-    <div class="card p-0 table-wrap">
-      <table class="table table-hover align-middle mb-0">
-        <thead>
-          <tr>
-            <th>Manifest Number</th>
-            <th>Manifest Date</th>
-            <th>Destination Country</th>
-            <th>Total Weight</th>
-            <th>Total Shipments</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="manifestBody"></tbody>
-      </table>
-      <div class="empty hidden" id="manifestEmpty">No manifests found.</div>
-    </div>
-  </section>
-
-</div>
-
-<div class="modal fade" id="detailModal" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="detailTitle">Manifest Details</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="detailSummary" class="mb-3"></div>
-        <div class="table-wrap">
-          <table class="table table-bordered table-sm">
-            <thead>
-              <tr>
-                <th>AWB Number</th>
-                <th>Reference Number</th>
-                <th>Destination Country</th>
-                <th>Service</th>
-                <th>Weight</th>
-                <th>C/N Date</th>
-                <th>Manifest Number</th>
-              </tr>
-            </thead>
-            <tbody id="detailBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -293,7 +216,7 @@ async function loadShipments(){
     endDate:$("endDate").value,
     awb:$("awbSearch").value.trim()
   });
-  if(!result.success) throw new Error(result.message || "Unable to load shipments.");
+  if(!result.success) throw new Error(result.message || "Unable to load shipments. Please check Google Apps Script manifest backend.");
   renderShipments(result.records || []);
 }
 
@@ -320,114 +243,11 @@ async function createManifest(){
 
   alert(`Manifest ${result.manifest.manifest_number} created successfully.`);
   await loadShipments();
-  await loadManifests();
-  location.hash = "search";
 }
 
-function renderManifests(items){
-  const body = $("manifestBody");
-  body.innerHTML = "";
-  $("manifestEmpty").classList.toggle("hidden", items.length !== 0);
 
-  items.forEach(m => {
-    const tr = document.createElement("tr");
-    tr.className = "manifest-row pointer";
-    tr.innerHTML = `
-      <td><strong>${esc(m.manifest_number)}</strong></td>
-      <td>${esc(m.manifest_date)}</td>
-      <td>${esc(m.country)}</td>
-      <td>${Number(m.total_weight||0).toFixed(2)}</td>
-      <td>${Number(m.total_shipments||0)}</td>
-      <td>
-        <button class="btn btn-sm btn-outline-primary me-1 detail-btn">View Shipments</button>
-        <button class="btn btn-sm btn-outline-danger delete-btn">Delete</button>
-      </td>
-    `;
 
-    tr.querySelector(".detail-btn").addEventListener("click", e => {
-      e.stopPropagation();
-      showManifestDetail(m.manifest_number);
-    });
 
-    tr.querySelector(".delete-btn").addEventListener("click", e => {
-      e.stopPropagation();
-      deleteManifest(m.manifest_number);
-    });
-
-    tr.addEventListener("click", () => showManifestDetail(m.manifest_number));
-    body.appendChild(tr);
-  });
-}
-
-async function loadManifests(){
-  const result = await api({
-    action:"searchmanifest",
-    startDate:$("manifestStart").value,
-    endDate:$("manifestEnd").value,
-    manifestNumber:$("manifestSearch").value.trim()
-  });
-  if(!result.success) throw new Error(result.message || "Unable to load manifests.");
-  renderManifests(result.manifests || []);
-}
-
-async function showManifestDetail(manifestNumber){
-  const result = await api({
-    action:"manifestdetail",
-    manifestNumber
-  });
-
-  if(!result.success){
-    alert(result.message || "Manifest details not found.");
-    return;
-  }
-
-  $("detailTitle").textContent = `Manifest Details — ${manifestNumber}`;
-
-  const shipments = result.shipments || [];
-  const totalWeight = shipments.reduce((s,x) => s + Number(x.weight||0), 0);
-  const country = shipments[0]?.destination_country || "";
-
-  $("detailSummary").innerHTML = `
-    <div class="row g-2">
-      <div class="col-md-3"><div class="p-2 bg-light rounded"><strong>Manifest:</strong><br>${esc(manifestNumber)}</div></div>
-      <div class="col-md-3"><div class="p-2 bg-light rounded"><strong>Country:</strong><br>${esc(country)}</div></div>
-      <div class="col-md-3"><div class="p-2 bg-light rounded"><strong>Total Shipments:</strong><br>${shipments.length}</div></div>
-      <div class="col-md-3"><div class="p-2 bg-light rounded"><strong>Total Weight:</strong><br>${totalWeight.toFixed(2)}</div></div>
-    </div>
-  `;
-
-  $("detailBody").innerHTML = shipments.map(s => `
-    <tr>
-      <td>${esc(s.awb_number)}</td>
-      <td>${esc(s.reference_number)}</td>
-      <td>${esc(s.destination_country)}</td>
-      <td>${esc(s.service)}</td>
-      <td>${Number(s.weight||0).toFixed(2)}</td>
-      <td>${esc(s.cn_date)}</td>
-      <td>${esc(s.manifest_number)}</td>
-    </tr>
-  `).join("");
-
-  bootstrap.Modal.getOrCreateInstance($("detailModal")).show();
-}
-
-async function deleteManifest(manifestNumber){
-  if(!confirm(`Delete ${manifestNumber}?\n\nIts shipments will become available again in Create Manifest.`)) return;
-
-  const result = await api({
-    action:"deletemanifest",
-    manifestNumber
-  });
-
-  if(!result.success){
-    alert(result.message || "Manifest could not be deleted.");
-    return;
-  }
-
-  alert(result.message);
-  await loadShipments();
-  await loadManifests();
-}
 
 $("searchShipmentsBtn").addEventListener("click", async () => {
   try { await loadShipments(); } catch(e){ alert(e.message); }
@@ -456,45 +276,19 @@ $("createManifestBtn").addEventListener("click", async () => {
   try { await createManifest(); } catch(e){ alert(e.message); }
 });
 
-$("searchManifestBtn").addEventListener("click", async () => {
-  try { await loadManifests(); } catch(e){ alert(e.message); }
-});
 
-$("resetManifestBtn").addEventListener("click", async () => {
-  $("manifestStart").value = "";
-  $("manifestEnd").value = "";
-  $("manifestSearch").value = "";
-  try { await loadManifests(); } catch(e){ alert(e.message); }
-});
 
 $("manifestToggle").addEventListener("click", () => {
   $("manifestSubmenu").classList.toggle("show");
 });
 
-$("searchManifestLink").addEventListener("click", e => {
-  e.preventDefault();
-  location.hash = "search";
-  $("searchSection").scrollIntoView({behavior:"smooth"});
-});
 
 $("createManifestLink").addEventListener("click", e => {
   e.preventDefault();
-  location.hash = "create";
   $("createSection").scrollIntoView({behavior:"smooth"});
 });
 
-window.addEventListener("hashchange", () => {
-  if(location.hash === "#search"){
-    $("searchSection").scrollIntoView({behavior:"smooth"});
-  } else if(location.hash === "#create"){
-    $("createSection").scrollIntoView({behavior:"smooth"});
-  }
-});
 
-$("logoutBtn").addEventListener("click", e => {
-  e.preventDefault();
-  window.location.href = "index.html";
-});
 
 (async function init(){
   if(WEB_APP_URL.includes("PASTE_YOUR_EXISTING")){
@@ -505,8 +299,6 @@ $("logoutBtn").addEventListener("click", e => {
   setLast7Days();
   try {
     await loadShipments();
-    await loadManifests();
-    if(location.hash === "#search") $("searchSection").scrollIntoView();
   } catch(e) {
     alert(e.message);
   }
