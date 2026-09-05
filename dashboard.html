@@ -91,9 +91,9 @@
     <a href="searching.html" class="client-feature" id="searchBook">🔍 Searching Booking</a>
     <a href="status.html" class="client-feature" id="trackShip">🚚 Track Shipments</a>
     <a href="rateinquiry.html" class="client-feature" id="rateInq">💰 Rate Inquiry</a>
-    <div class="client-feature" id="manifestMenu" style="margin:5px 0;">
-      <a href="manifest.html" style="display:block;">📦 Manifest</a>
-      <div style="padding-left:12px;">
+    <div class="client-feature manifest-menu" id="manifestMenu" style="margin:5px 0;">
+      <a href="#" id="manifestToggle" style="display:block;">📦 Manifest <span style="float:right;">▸</span></a>
+      <div id="manifestSubmenu" style="display:none;padding-left:12px;">
         <a href="manifest.html#create" style="font-size:14px;padding:8px 12px;">➕ Create Manifest</a>
         <a href="manifest.html#search" style="font-size:14px;padding:8px 12px;">🔎 Search Manifest</a>
       </div>
@@ -240,6 +240,28 @@ await setPersistence(auth, browserSessionPersistence);
         }
         document.querySelectorAll(".sidebar a[href]").forEach(item => item.classList.remove("active"));
         link.classList.add("active");
+      });
+    });
+
+    // Manifest submenu: show Create/Search only after clicking Manifest.
+    const manifestToggle = document.getElementById("manifestToggle");
+    const manifestSubmenu = document.getElementById("manifestSubmenu");
+
+    manifestToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      const isOpen = manifestSubmenu.style.display === "block";
+      manifestSubmenu.style.display = isOpen ? "none" : "block";
+      manifestToggle.querySelector("span").textContent = isOpen ? "▸" : "▾";
+      manifestToggle.classList.toggle("active", !isOpen);
+    });
+
+    // Keep submenu open when Create/Search Manifest is selected.
+    document.querySelectorAll("#manifestSubmenu a").forEach(link => {
+      link.addEventListener("click", () => {
+        manifestSubmenu.style.display = "block";
+        manifestToggle.querySelector("span").textContent = "▾";
+        document.querySelectorAll(".sidebar a").forEach(item => item.classList.remove("active"));
+        manifestToggle.classList.add("active");
       });
     });
 
