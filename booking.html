@@ -291,6 +291,21 @@
 
     #codAmountWrap { margin-top: 8px; }
 
+    .account-select-wrap {
+      position: relative;
+    }
+
+    .account-select-wrap .select2-container {
+      width: 100% !important;
+    }
+
+    .account-loading {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 4px;
+      display: none;
+    }
+
     /* 👇 Preview Mode Styling */
     .readonly input,
     .readonly select,
@@ -367,6 +382,15 @@
             <input type="text" name="tracking_number">
             <label>Reference Number</label>
             <input type="text" name="reference_number">
+            <label>Account</label>
+            <div class="account-select-wrap">
+              <select class="form-control account-select" name="account_code" id="accountCode" required>
+                <option value=""></option>
+              </select>
+              <input type="hidden" name="account_name" id="accountName">
+              <!-- Account Code / Account Name are saved by Code.gs in AW / AX. -->
+              <div id="accountLoading" class="account-loading">Loading accounts...</div>
+            </div>
             <label>Shipper Company</label>
             <input type="text" name="shipper_company">
             <label>Shipper Name</label>
@@ -1135,13 +1159,18 @@ const codCurrencies = [
     function populateBookingFromRecord(record) {
       if (!record) return;
       const names = [
-        "date","awb_number","tracking_number","reference_number","shipper_company","shipper_name",
+        "date","awb_number","tracking_number","reference_number","account_code","account_name","shipper_company","shipper_name",
         "shipper_contact","ship_address1","ship_address2","ship_city","ship_country","ship_ntn","ship_nic",
         "service","type","receiver_company","receiver_attention","receiver_contact","receiver_address1",
         "receiver_address2","receiver_zip","receiver_city","receiver_country","pieces","weight","chrg_weight",
         "dim_weight","payable","total","balance","cod_status","cod_amount","cod_currency"
       ];
       names.forEach(n => setField(n, record[n]));
+
+      // Restore Account selection when an existing shipment is opened from Searching Booking.
+      if (record.account_code !== undefined || record.account_name !== undefined) {
+        setAccountSelection(record.account_code || "", record.account_name || "");
+      }
 
       // Select2 fields need their own value assignment.
       if (record.ship_country !== undefined) $("[name=ship_country]").val(record.ship_country || "").trigger("change");
@@ -1346,6 +1375,130 @@ const codCurrencies = [
         return text.indexOf(term) === 0 ? data : null;
       }
 
+
+      // =========================================================
+      // ACCOUNT SELECTOR
+      // Loads active accounts from the Google Sheets Accounts sheet.
+      // Display format: ACCOUNT CODE — ACCOUNT NAME
+      // The selected code + name are submitted with the shipment.
+      // =========================================================
+      let bookingAccounts = [];
+      let accountsLoaded = false;
+
+      function accountOptionText(account) {
+        return String(account.accountCode || "").trim() +
+          " — " +
+          String(account.accountName || "").trim();
+      }
+
+      function setAccountSelection(code, name) {
+        const $account = $("#accountCode");
+        const accountCode = String(code || "").trim();
+        const accountName = String(name || "").trim();
+
+        if (!accountCode) {
+          $account.val("").trigger("change");
+          $("#accountName").val("");
+          return;
+        }
+
+        let account = bookingAccounts.find(function (a) {
+          return String(a.accountCode || "").trim().toLowerCase() === accountCode.toLowerCase();
+        });
+
+        if (!account) {
+          // Preserve an account already saved on an older shipment even if it
+          // is no longer active/listed.
+          account = {
+            accountCode: accountCode,
+            accountName: accountName || accountCode,
+            status: "Saved"
+          };
+          $account.append(new Option(accountOptionText(account), account.accountCode, true, true));
+        }
+
+        $account.val(account.accountCode).trigger("change");
+        $("#accountName").val(account.accountName || accountName);
+      }
+
+      function loadBookingAccounts(selectedCode, selectedName) {
+        const $account = $("#accountCode");
+        $("#accountLoading").show();
+        $account.prop("disabled", true);
+
+        $.ajax({
+          url: $form.attr("action"),
+          method: "GET",
+          dataType: "jsonp",
+          data: {
+            action: "listaccounts",
+            _: Date.now()
+          },
+          cache: false,
+          timeout: 15000,
+          success: function (res) {
+            bookingAccounts = (res && res.success && Array.isArray(res.accounts))
+              ? res.accounts
+              : [];
+
+            $account.empty().append(new Option("", ""));
+
+            bookingAccounts.forEach(function (account) {
+              const status = String(account.status || "Active").trim().toLowerCase();
+              // Frozen accounts should not be selectable for NEW bookings.
+              // They remain visible so the operator can see why they cannot use it.
+              const option = new Option(
+                accountOptionText(account) + (status === "frozen" ? " — FROZEN" : ""),
+                account.accountCode
+              );
+              option.disabled = status === "frozen";
+              $account.append(option);
+            });
+
+            accountsLoaded = true;
+            setAccountSelection(selectedCode || "", selectedName || "");
+          },
+          error: function () {
+            bookingAccounts = [];
+            accountsLoaded = false;
+            $account.empty().append(new Option("", ""));
+            alert("Accounts load nahi ho sake. Google Apps Script connection check karein.");
+          },
+          complete: function () {
+            $("#accountLoading").hide();
+            $account.prop("disabled", false);
+
+            // Respect the page's initial read-only state.
+            if ($("#bookingForm").hasClass("readonly")) {
+              $account.prop("disabled", true);
+            }
+          }
+        });
+      }
+
+      $("#accountCode").select2({
+        placeholder: "Select Account",
+        allowClear: true,
+        width: "100%",
+        matcher: startsWithMatcher
+      });
+
+      $("#accountCode").on("change", function () {
+        const code = String($(this).val() || "").trim();
+        const account = bookingAccounts.find(function (a) {
+          return String(a.accountCode || "").trim().toLowerCase() === code.toLowerCase();
+        });
+
+        $("#accountName").val(account ? String(account.accountName || "") : "");
+
+        // Frozen accounts are blocked even if selected programmatically.
+        if (account && String(account.status || "").trim().toLowerCase() === "frozen") {
+          $(this).val("").trigger("change");
+          $("#accountName").val("");
+          alert("This account is frozen. Please select an active account.");
+        }
+      });
+
       $(".country-select").select2({
         placeholder: "Select country",
         allowClear: true,
@@ -1369,6 +1522,9 @@ const codCurrencies = [
 
       const $form = $("#bookingForm");
       const $toggleEdit = $("#toggleEdit");
+
+      // Load Accounts directly from Google Sheets.
+      loadBookingAccounts();
 
       // Generate the next live AWB from Google Apps Script.
       // The server uses LockService, so simultaneous bookings still get unique AWBs.
@@ -1421,6 +1577,7 @@ const codCurrencies = [
 
       $("#bookingForm input, #bookingForm textarea, #bookingForm select").prop("disabled", true);
       $(".country-select, .service-select").prop("disabled", true).trigger("change");
+      $("#accountCode").prop("disabled", true).trigger("change");
       $("#manualService").prop("disabled", true);
 
       // Commercial Invoice calculations.
@@ -1591,6 +1748,25 @@ const codCurrencies = [
         const $printButton = $("#printBooking");
 
         const currentAwb = String($("input[name='awb_number']").val() || "").trim();
+
+        const selectedAccountCode = String($("#accountCode").val() || "").trim();
+        const selectedAccountName = String($("#accountName").val() || "").trim();
+
+        if (!selectedAccountCode) {
+          alert("Please select an Account before submitting the shipment.");
+          return;
+        }
+
+        const selectedAccount = bookingAccounts.find(function (a) {
+          return String(a.accountCode || "").trim().toLowerCase() === selectedAccountCode.toLowerCase();
+        });
+
+        if (selectedAccount &&
+            String(selectedAccount.status || "Active").trim().toLowerCase() === "frozen") {
+          alert("Selected account is frozen. Please select an active account.");
+          return;
+        }
+
         if (!/^500\d{8}$/.test(currentAwb) || currentAwb === "Generating...") {
           alert("AWB number abhi generate nahi hua. Please wait or click New Booking again.");
           return;
