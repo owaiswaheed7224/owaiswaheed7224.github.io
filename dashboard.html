@@ -116,6 +116,16 @@
     <a href="status.html" class="client-feature" id="trackShip">🚚 Track Shipments</a>
     <a href="rateinquiry.html" class="client-feature" id="rateInq">💰 Rate Inquiry</a>
 
+    <!-- Accounts -->
+    <div class="client-feature sidebar-group" id="accountsMenu">
+      <a href="javascript:void(0)" class="group-toggle">👤 Accounts</a>
+      <div class="submenu">
+        <a href="vouchers.html">🧾 Vouchers</a>
+        <a href="accountlist.html">📋 Account List</a>
+        <a href="ledger.html">📒 Ledger</a>
+      </div>
+    </div>
+
     <div class="client-feature sidebar-group" id="manifestMenu">
       <a href="javascript:void(0)" class="group-toggle">📦 Manifest</a>
       <div class="submenu">
@@ -229,7 +239,7 @@ await setPersistence(auth, browserSessionPersistence);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data();
-          const features = ["shipBook", "searchBook", "trackShip", "rateInq", "manifestMenu"];
+          const features = ["shipBook", "searchBook", "trackShip", "rateInq", "manifestMenu", "accountsMenu"];
           features.forEach(id => {
             document.getElementById(id).style.display = data[id] ? "block" : "none";
           });
