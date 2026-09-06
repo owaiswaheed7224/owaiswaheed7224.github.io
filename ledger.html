@@ -149,6 +149,7 @@ table.ledger{width:100%;min-width:1450px;border-collapse:collapse;font-size:11px
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <script>
+// No. column is ALWAYS the AWB Number from booking data Column C.
 const API_URL="https://script.google.com/macros/s/AKfycbwFGbq2qQw_wXx1vKKry5rJPL6TlPYYUMJMyOpoCM7T67TyfKta9t97wvOCkjdlC2_B/exec";
 let ledgerData=null;
 
@@ -235,7 +236,7 @@ function renderLedger(data){
     ? `<b>Sender:</b> ${esc(t.sender||"")}<br><b>Consignee:</b> ${esc(t.consignee||"")}<br>${esc(t.description||"")}`
     : `<b>${esc(t.description||"Payment Received")}</b>`;
   return `<tr class="${t.type==="CN"?"shipment":"payment"}">
-   <td>${esc(t.date||"")}</td><td>${esc(t.type||"")}</td><td>${esc(t.awbNumber||t.awb_number||t.awb||"")}</td><td>${esc(t.bookingDate||"")}</td>
+   <td>${esc(t.date||"")}</td><td>${esc(t.type||"")}</td><td>${esc(t.awbNumber||t.awb_number||t.awb||t.number||"")}</td><td>${esc(t.bookingDate||"")}</td>
    <td>${esc(t.destination||"")}</td><td>${esc(t.trackingNo||"")}</td><td class="num">${esc(t.pieces??"")}</td>
    <td class="num">${esc(t.weight??"")}</td><td class="num">${esc(t.chargedWeight??"")}</td><td>${esc(t.shipmentType||"")}</td>
    <td>${esc(t.service||"")}</td><td>${desc}</td><td class="num">${t.rate===""?"":money(t.rate)}</td>
@@ -262,7 +263,7 @@ function exportExcel(){
   ["Date","Type","No.","Booking Date","Dest","Tracking No.","PKGS","Weight","Charged Weight","Shipment Type","Service","Sender / Consignee / Particulars","Rate/KG","Document Amount","Debit","Credit","Balance","D/C"]
  ];
  (ledgerData.transactions||[]).forEach(t=>rows.push([
-  t.date||"",t.type||"",t.awbNumber||t.awb_number||t.awb||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",t.shipmentType||"",t.service||"",
+  t.date||"",t.type||"",t.awbNumber||t.awb_number||t.awb||t.number||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",t.shipmentType||"",t.service||"",
   (t.type==="CN"?("Sender: "+(t.sender||"")+" | Consignee: "+(t.consignee||"")+" | "+(t.description||"")):(t.description||"Payment Received")),
   t.rate===""?"":t.rate,t.chargeAmount||"",t.debit||"",t.credit||"",t.balance||0,t.dc||""
  ]));
@@ -297,7 +298,7 @@ function exportPdf(){
  const head=[["Date","Type","No. (AWB)","Book Date","Dest","Tracking No.","PKGS","Weight","Chg Wt","Shipment Type","Service","Sender / Consignee / Particulars","Rate/KG","Amount","Debit","Credit","Balance","D/C"]];
  const foot=[["TOTAL","","","","","","","","","","","","","",money(totalDebit),money(totalCredit),money(Math.abs(closing)),dc]];
  const body=(ledgerData.transactions||[]).map(t=>[
-  t.date||"",t.type||"",t.awbNumber||t.awb_number||t.awb||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",
+  t.date||"",t.type||"",t.awbNumber||t.awb_number||t.awb||t.number||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",
   t.shipmentType||"",t.service||"",
   t.type==="CN"?("Sender: "+(t.sender||"")+" | Consignee: "+(t.consignee||"")+" | "+(t.description||"")):(t.description||"Payment Received"),
   t.rate===""?"":money(t.rate),t.chargeAmount?money(t.chargeAmount):"",t.debit?money(t.debit):"",t.credit?money(t.credit):"",money(t.balance),t.dc||""
