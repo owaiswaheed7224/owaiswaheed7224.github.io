@@ -16,7 +16,7 @@ body{margin:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#1
 .sidebar a{display:block;padding:12px 15px;margin:5px 0;color:#fff;text-decoration:none;border-radius:8px;transition:.3s}
 .sidebar a:hover,.sidebar a.active{background:#0b5ed7;box-shadow:inset 4px 0 0 #fff}
 .main{margin-left:245px;min-height:100vh}
-.topbar{height:72px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 30px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.topbar{height:72px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 30px;box-shadow:0 2px 12px rgba(0,0,0,.06);position:sticky;top:0;z-index:100}.topbar-right{display:flex;align-items:center;gap:12px}.logout-btn{border:1px solid #e5e7eb;background:#fff;color:#374151;border-radius:9px;padding:8px 14px;font-weight:700;font-size:13px}.logout-btn:hover{background:#f8fafc;color:#dc2626}
 .top-title{font-weight:700;font-size:20px}
 .content{max-width:1100px;margin:30px auto;padding:0 22px}
 .search-card,.shipment-card{background:#fff;border-radius:16px;box-shadow:0 6px 25px rgba(0,0,0,.07)}
@@ -26,7 +26,7 @@ body{margin:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#1
 .search-row{display:flex;gap:12px;margin-top:22px}
 .search-row input{flex:1;height:50px;border:1px solid #d1d5db;border-radius:10px;padding:0 16px}
 .btn-primary-custom{height:50px;padding:0 28px;border:0;border-radius:10px;background:#0d6efd;color:#fff;font-weight:600}
-#shipmentSection{display:none}
+#shipmentSection{display:none}.manifest-section{display:none}.manifest-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.manifest-count{font-size:13px;color:#6b7280}.manifest-list{display:grid;gap:14px}.manifest-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.05)}.manifest-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;background:#f8fafc;border-bottom:1px solid #e5e7eb}.manifest-awb{font-weight:800;color:#0d6efd}.manifest-card-body{padding:15px 18px}.manifest-mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.mini-label{font-size:10px;text-transform:uppercase;color:#6b7280;font-weight:700}.mini-value{font-size:13px;font-weight:700;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.manifest-status-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid #eef0f3}.manifest-status{font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;background:#eef2ff;color:#3730a3}.manifest-actions{display:flex;gap:7px}.manifest-update-btn{border:0;border-radius:8px;background:#0d6efd;color:#fff;padding:7px 11px;font-size:12px;font-weight:700}.manifest-update-btn:disabled{opacity:.65}.manifest-bulk-panel{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;margin-bottom:15px}.manifest-bulk-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.bulk-status-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bulk-status-options label{cursor:pointer;border:1px solid #d1d5db;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:700}.bulk-status-options input{display:none}.bulk-status-options input:checked+label{background:#0d6efd;color:#fff;border-color:#0d6efd}.bulk-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.manifest-progress{display:none;margin-top:10px}.mode-switch{display:flex;gap:6px;margin-top:18px}.mode-btn{border:1px solid #d1d5db;background:#fff;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:700;color:#374151}.mode-btn.active{background:#0d6efd;color:#fff;border-color:#0d6efd}
 .shipment-head{padding:20px 25px;background:#f8fafc;border-bottom:1px solid #e5e7eb}
 .awb{color:#0d6efd;font-size:19px;font-weight:700}
 .details{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e5e7eb}
@@ -65,8 +65,7 @@ textarea{min-height:105px;resize:vertical}
 .delete-status-btn{border:1px solid #fecaca;background:#fff;color:#dc2626;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;margin-left:5px}
 .delete-status-btn:hover{background:#fef2f2}
 .status-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800;margin-left:7px}
-@media(max-width:600px){
-  .status-type-grid{gap:5px}
+@media(max-width:900px){.manifest-mini-grid{grid-template-columns:repeat(2,1fr)}.manifest-bulk-grid{grid-template-columns:1fr}.manifest-toolbar{align-items:flex-start;flex-direction:column}}\n@media(max-width:600px){\n  .status-type-grid{gap:5px}
   .status-option label{padding:6px 8px;font-size:11px}
   .history-item{padding-right:20px}
   .history-actions{position:static;margin-top:10px}
@@ -109,21 +108,72 @@ textarea{min-height:105px;resize:vertical}
 <main class="main">
 <header class="topbar">
 <div class="top-title">Track Shipments</div>
-<div class="muted"><i class="bi bi-shield-lock"></i> Internal Portal</div>
+<div class="topbar-right"><div class="muted"><i class="bi bi-shield-lock"></i> Internal Portal</div><button class="logout-btn" onclick="logoutUser()"><i class="bi bi-box-arrow-right me-1"></i> Logout</button></div>
 </header>
 
 <section class="content">
 <div class="search-card">
 <div class="page-title">Internal Shipment Status</div>
-<div class="muted">Enter a shipment number to view the booking and update its movement history.</div>
+<div class="muted">Search one shipment or search a complete manifest and update its shipments quickly.</div>
 
-<div class="search-row">
+<div class="mode-switch">
+<button id="shipmentModeBtn" class="mode-btn active" onclick="setSearchMode('shipment')"><i class="bi bi-box-seam me-1"></i> Shipment</button>
+<button id="manifestModeBtn" class="mode-btn" onclick="setSearchMode('manifest')"><i class="bi bi-collection me-1"></i> Manifest</button>
+</div>
+
+<div id="shipmentSearchMode" class="search-row">
 <input id="shipmentNumber" type="text" placeholder="Enter Shipment / AWB Number" onkeypress="enterSearch(event)">
 <button id="searchButton" class="btn-primary-custom" onclick="searchShipment()">
 <i class="bi bi-search"></i> Search
 </button>
 </div>
+
+<div id="manifestSearchMode" class="search-row" style="display:none">
+<input id="manifestNumber" type="text" placeholder="Enter Manifest Number" onkeypress="enterManifest(event)">
+<button id="manifestSearchButton" class="btn-primary-custom" onclick="searchManifest()">
+<i class="bi bi-search"></i> Search Manifest
+</button>
+</div>
 <div id="alertBox" class="alert-box"></div>
+</div>
+
+<div id="manifestSection" class="manifest-section">
+  <div class="manifest-toolbar">
+    <div>
+      <div class="page-title" style="font-size:21px">Manifest Shipments</div>
+      <div id="manifestSummary" class="manifest-count">—</div>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" onclick="clearManifest()"><i class="bi bi-arrow-left"></i> Back</button>
+  </div>
+
+  <div class="manifest-bulk-panel">
+    <div class="fw-bold">Short Status Update</div>
+    <div class="muted" style="font-size:12px;margin-top:3px">Select one status and apply it to all shipments in this manifest.</div>
+    <div class="bulk-status-options">
+      <div><input type="radio" name="bulkStatusType" id="bulkPending" value="Pending"><label for="bulkPending">Pending</label></div>
+      <div><input type="radio" name="bulkStatusType" id="bulkPickedUp" value="Picked Up"><label for="bulkPickedUp">Picked Up</label></div>
+      <div><input type="radio" name="bulkStatusType" id="bulkInTransit" value="In Transit"><label for="bulkInTransit">In Transit</label></div>
+      <div><input type="radio" name="bulkStatusType" id="bulkOnWay" value="On the Way"><label for="bulkOnWay">On the Way</label></div>
+      <div><input type="radio" name="bulkStatusType" id="bulkOFD" value="Out for Delivery"><label for="bulkOFD">Out for Delivery</label></div>
+      <div><input type="radio" name="bulkStatusType" id="bulkDelivered" value="Delivered"><label for="bulkDelivered">Delivered</label></div>
+      <div><input type="radio" name="bulkStatusType" id="bulkReturned" value="Returned"><label for="bulkReturned">Returned</label></div>
+      <div><input type="radio" name="bulkStatusType" id="bulkCancelled" value="Cancelled"><label for="bulkCancelled">Cancelled</label></div>
+    </div>
+    <div class="manifest-bulk-grid" style="margin-top:12px">
+      <input id="bulkRemarks" class="form-control form-control-sm" placeholder="Short remarks (optional)">
+      <input id="bulkCountry" class="form-control form-control-sm" value="Pakistan" placeholder="Country">
+      <input id="bulkCity" class="form-control form-control-sm" placeholder="City">
+    </div>
+    <div class="bulk-actions">
+      <button id="bulkUpdateButton" class="btn btn-primary btn-sm" onclick="bulkUpdateManifest()"><i class="bi bi-lightning-charge"></i> Update All Shipments</button>
+    </div>
+    <div id="manifestProgress" class="manifest-progress">
+      <div class="progress" style="height:7px"><div id="manifestProgressBar" class="progress-bar" style="width:0%"></div></div>
+      <div id="manifestProgressText" class="muted" style="font-size:11px;margin-top:5px">Preparing...</div>
+    </div>
+  </div>
+
+  <div id="manifestList" class="manifest-list"></div>
 </div>
 
 <div id="shipmentSection" class="shipment-card">
@@ -219,7 +269,7 @@ textarea{min-height:105px;resize:vertical}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -235,6 +285,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+async function logoutUser() {
+  try {
+    await signOut(auth);
+    window.location.href = "index.html";
+  } catch (err) {
+    console.error("Logout error:", err);
+    alert("Unable to logout. Please try again.");
+  }
+}
+
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -389,6 +450,239 @@ function setSearchLoading(loading) {
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-search"></i> Search';
   }
+}
+
+
+let currentSearchMode = "shipment";
+let currentManifest = "";
+let currentManifestShipments = [];
+
+function setSearchMode(mode) {
+  currentSearchMode = mode;
+  const shipmentMode = mode === "shipment";
+  document.getElementById("shipmentSearchMode").style.display = shipmentMode ? "flex" : "none";
+  document.getElementById("manifestSearchMode").style.display = shipmentMode ? "none" : "flex";
+  document.getElementById("shipmentModeBtn").classList.toggle("active", shipmentMode);
+  document.getElementById("manifestModeBtn").classList.toggle("active", !shipmentMode);
+  document.getElementById("shipmentSection").style.display = "none";
+  document.getElementById("manifestSection").style.display = "none";
+  document.getElementById("alertBox").style.display = "none";
+}
+
+function enterManifest(e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    searchManifest();
+  }
+}
+
+function setManifestLoading(loading) {
+  const btn = document.getElementById("manifestSearchButton");
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<span class="spinner-border spinner-border-sm me-1"></span> Searching...'
+    : '<i class="bi bi-search"></i> Search Manifest';
+}
+
+function normalizeManifestShipments(result) {
+  if (!result) return [];
+  const candidates =
+    result.shipments ||
+    (result.manifest && result.manifest.shipments) ||
+    (result.payload && Array.isArray(result.payload) ? result.payload : null) ||
+    [];
+  if (!Array.isArray(candidates)) return [];
+
+  return candidates.map(function(item) {
+    const s = item.shipment || item;
+    return {
+      shipmentNumber: s.shipmentNumber || s.shipment_no || s.awb || s.consignment_no || "",
+      customerName: s.customerName || s.customer_name || "",
+      consigneeName: s.consigneeName || s.consignee_name || "",
+      bookingDate: s.bookingDate || s.booking_date || "",
+      weight: s.weight || s.actualWeight || "",
+      status: s.statusType || s.status || "",
+      history: s.history || []
+    };
+  }).filter(function(s) { return s.shipmentNumber; });
+}
+
+function searchManifest() {
+  const manifest = document.getElementById("manifestNumber").value.trim();
+  if (!manifest) {
+    showAlert("Please enter manifest number.", "error");
+    return;
+  }
+
+  currentManifest = manifest;
+  document.getElementById("shipmentSection").style.display = "none";
+  document.getElementById("manifestSection").style.display = "none";
+  showAlert("Searching manifest...", "success");
+  setManifestLoading(true);
+
+  /*
+    Expected Apps Script action:
+    searchmanifeststatus
+    It should return {success:true, shipments:[...]}.
+    Each shipment can contain shipmentNumber/shipment_no, customerName/customer_name,
+    consigneeName/consignee_name, bookingDate/booking_date, weight and status.
+  */
+  callTrackingAPI(
+    { action: "searchmanifeststatus", manifest: manifest },
+    function(result) {
+      setManifestLoading(false);
+      if (!result || !result.success) {
+        showAlert((result && result.message) || "Manifest not found.", "error");
+        return;
+      }
+
+      currentManifestShipments = normalizeManifestShipments(result);
+      if (!currentManifestShipments.length) {
+        showAlert("No shipments found in this manifest.", "error");
+        return;
+      }
+
+      renderManifestShipments(currentManifestShipments);
+      document.getElementById("manifestSummary").textContent =
+        "Manifest: " + currentManifest + " • " + currentManifestShipments.length + " shipment(s)";
+      document.getElementById("manifestSection").style.display = "block";
+      document.getElementById("alertBox").style.display = "none";
+    },
+    function(error) {
+      setManifestLoading(false);
+      showAlert("Unable to connect to shipment tracking server. Please try again.", "error");
+      console.error(error);
+    }
+  );
+}
+
+function renderManifestShipments(shipments) {
+  const box = document.getElementById("manifestList");
+  box.innerHTML = shipments.map(function(s, index) {
+    return '<div class="manifest-card">' +
+      '<div class="manifest-card-head">' +
+        '<div><div class="mini-label">Shipment / AWB</div><div class="manifest-awb">' + escapeHtml(s.shipmentNumber) + '</div></div>' +
+        '<span class="manifest-status">' + escapeHtml(s.status || "No Status") + '</span>' +
+      '</div>' +
+      '<div class="manifest-card-body">' +
+        '<div class="manifest-mini-grid">' +
+          '<div><div class="mini-label">Customer</div><div class="mini-value">' + escapeHtml(s.customerName || "—") + '</div></div>' +
+          '<div><div class="mini-label">Consignee</div><div class="mini-value">' + escapeHtml(s.consigneeName || "—") + '</div></div>' +
+          '<div><div class="mini-label">Booking Date</div><div class="mini-value">' + escapeHtml(shortDate(s.bookingDate)) + '</div></div>' +
+          '<div><div class="mini-label">Weight</div><div class="mini-value">' + escapeHtml(s.weight ? s.weight + " KG" : "—") + '</div></div>' +
+        '</div>' +
+        '<div class="manifest-status-row">' +
+          '<span class="muted" style="font-size:12px">Ready for quick update</span>' +
+          '<div class="manifest-actions"><button class="manifest-update-btn" onclick="openManifestShipment(' + index + ')"><i class="bi bi-pencil-square"></i> Update</button></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join("");
+}
+
+function openManifestShipment(index) {
+  const item = currentManifestShipments[index];
+  if (!item || !item.shipmentNumber) return;
+
+  setSearchMode("shipment");
+  document.getElementById("shipmentNumber").value = item.shipmentNumber;
+  searchShipment();
+}
+
+function getBulkStatusType() {
+  const checked = document.querySelector('input[name="bulkStatusType"]:checked');
+  return checked ? checked.value : "";
+}
+
+async function bulkUpdateManifest() {
+  const statusType = getBulkStatusType();
+  if (!statusType) {
+    showAlert("Please select a status for the manifest.", "error");
+    return;
+  }
+  if (!currentManifestShipments.length) {
+    showAlert("No manifest shipments loaded.", "error");
+    return;
+  }
+
+  const remarksInput = document.getElementById("bulkRemarks").value.trim();
+  const country = document.getElementById("bulkCountry").value.trim();
+  const city = document.getElementById("bulkCity").value.trim();
+  const remarks = remarksInput || statusType;
+
+  if (!country || !city) {
+    showAlert("Please enter country and city.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("bulkUpdateButton");
+  const progress = document.getElementById("manifestProgress");
+  const bar = document.getElementById("manifestProgressBar");
+  const progressText = document.getElementById("manifestProgressText");
+
+  btn.disabled = true;
+  progress.style.display = "block";
+
+  const now = new Date();
+  const dateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString().slice(0, 16);
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < currentManifestShipments.length; i++) {
+    const awb = currentManifestShipments[i].shipmentNumber;
+    progressText.textContent = "Updating " + (i + 1) + " of " + currentManifestShipments.length + " • " + awb;
+    bar.style.width = Math.round(((i) / currentManifestShipments.length) * 100) + "%";
+
+    try {
+      const result = await callTrackingAPIPromise({
+        action: "addshipmentstatus",
+        awb: awb,
+        statusType: statusType,
+        status: remarks,
+        remarks: remarks,
+        dateTime: dateTime,
+        country: country,
+        city: city
+      });
+
+      if (result && result.success) {
+        successCount++;
+        currentManifestShipments[i].status = statusType;
+      } else {
+        failCount++;
+      }
+    } catch (err) {
+      failCount++;
+      console.error("Manifest update failed:", awb, err);
+    }
+  }
+
+  bar.style.width = "100%";
+  progressText.textContent = "Completed • " + successCount + " updated" + (failCount ? " • " + failCount + " failed" : "");
+  btn.disabled = false;
+
+  renderManifestShipments(currentManifestShipments);
+  showAlert(
+    successCount + " shipment(s) updated successfully." + (failCount ? " " + failCount + " failed." : ""),
+    failCount ? "error" : "success"
+  );
+}
+
+function callTrackingAPIPromise(params) {
+  return new Promise(function(resolve, reject) {
+    callTrackingAPI(params, resolve, reject);
+  });
+}
+
+function clearManifest() {
+  currentManifest = "";
+  currentManifestShipments = [];
+  document.getElementById("manifestSection").style.display = "none";
+  document.getElementById("manifestNumber").value = "";
+  document.getElementById("alertBox").style.display = "none";
 }
 
 function searchShipment() {
