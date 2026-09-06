@@ -7,52 +7,15 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <style>
-body { background-color: #f5f7fa; margin: 0; font-family: Arial, sans-serif; color:#202124; }
-.sidebar {
-  height: 100vh;
-  width: 240px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  background: #0d6efd;
-  color: #fff;
-  padding: 20px 15px;
-  overflow-y:auto;
-}
-.sidebar .logo-box {
-  background: #fff;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 25px;
-  border: 2px solid #ddd;
-  text-align: center;
-}
-.sidebar .logo-box img {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-}
-.sidebar a {
-  display: block;
-  padding: 12px 15px;
-  margin: 5px 0;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: 0.3s;
-}
-.sidebar a:hover, .sidebar a.active { background: #0b5ed7; box-shadow: inset 4px 0 0 #fff; }
-.navbar-custom { margin-left: 260px; background-color: #0d6efd; }
-.navbar-custom .navbar-brand { color:#fff; font-weight:bold; font-size:20px; }
-.navbar-custom .nav-link, .navbar-custom .dropdown-toggle { color:#fff; }
-.navbar-custom .dropdown-menu { right:0; left:auto; }
-.main-content { margin-left: 260px; padding: 20px; }
-.sidebar-group { margin: 5px 0; }
-.sidebar-group > .group-toggle { cursor:pointer; margin:0; }
-.sidebar-group .submenu { display:none; padding-left:12px; }
-.sidebar-group.open .submenu { display:block; }
-.sidebar-group .submenu a { font-size:14px; padding:8px 12px; margin:2px 0; }
-.admin-only, .client-feature { display:none; }
+body{background:#f5f7fa;font-family:Arial,sans-serif;color:#202124}
+.sidebar{height:100vh;width:240px;position:fixed;top:0;left:0;background:#0d6efd;color:#fff;padding:20px 15px;overflow-y:auto}
+.logo-box{background:#fff;padding:15px;border-radius:10px;margin-bottom:25px;border:2px solid #ddd;text-align:center}
+.logo-box img{width:100%;height:auto;object-fit:contain}
+.sidebar a{display:block;padding:12px 15px;margin:5px 0;color:#fff;text-decoration:none;border-radius:8px}
+.sidebar a:hover,.sidebar a.active{background:#0b5ed7;box-shadow:inset 4px 0 0 #fff}
+.navbar-custom{margin-left:260px;background:#0d6efd}
+.navbar-custom .navbar-brand,.navbar-custom .nav-link{color:#fff}
+.main-content{margin-left:260px;padding:95px 20px 30px}
 .card{border:0;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .filter-card{padding:18px}
 .summary-card{padding:15px;height:100%}
@@ -82,72 +45,28 @@ table.ledger{width:100%;min-width:1450px;border-collapse:collapse;font-size:11px
 </style>
 </head>
 <body>
-<!-- Sidebar — same structure/behavior as dashboard.html -->
 <div class="sidebar">
-  <div class="logo-box">
-    <img src="Logo.png" alt="Company Logo">
-  </div>
+  <div class="logo-box"><img src="Logo.png" alt="Company Logo"></div>
   <a href="dashboard.html">🏠 Dashboard</a>
-
-  <div class="client-feature sidebar-group" id="shipmentGroup">
-    <a href="javascript:void(0)" class="group-toggle">📦 Shipments</a>
-    <div class="submenu">
-      <a href="https://owaiswaheed7224.github.io/booking.html">➕ Shipment Booking</a>
-      <a href="searching.html">🔍 Searching Booking</a>
-    </div>
-  </div>
-  <a href="status.html" class="client-feature" id="trackShip">🚚 Track Shipments</a>
-  <a href="rateinquiry.html" class="client-feature" id="rateInq">💰 Rate Inquiry</a>
-
-  <div class="client-feature sidebar-group" id="accountsMenu">
-    <a href="javascript:void(0)" class="group-toggle">👤 Accounts</a>
-    <div class="submenu">
-      <a href="vouchers.html">🧾 Vouchers</a>
-      <a href="accountlist.html">📋 Account List</a>
-      <a href="ledger.html" class="active">📒 Ledger</a>
-    </div>
-  </div>
-
-  <div class="client-feature sidebar-group" id="manifestMenu">
-    <a href="javascript:void(0)" class="group-toggle">📦 Manifest</a>
-    <div class="submenu">
-      <a href="manifest.html#create">➕ Create Manifest</a>
-      <a href="manifest.html#search">🔎 Search Manifest</a>
-    </div>
-  </div>
-
-  <div class="admin-only sidebar-group" id="signupGroup">
-    <a href="javascript:void(0)" class="group-toggle">👤 Signup Approvals</a>
-    <div class="submenu">
-      <a href="pending.html">⏳ Pending Signups</a>
-      <a href="approved.html">✅ Approved Signups</a>
-    </div>
-  </div>
-  <a href="manageclients.html" class="admin-only">👥 Manage Clients</a>
+  <a href="booking.html">📦 Shipment Booking</a>
+  <a href="searching.html">🔍 Searching Booking</a>
+  <a href="status.html">🚚 Track Shipments</a>
+  <a href="rateinquiry.html">💰 Rate Inquiry</a>
+  <a href="accountlist.html">📃 Account List</a>
+  <a href="ledger.html" class="active">📒 Accounts Ledger</a>
 </div>
 
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm fixed-top">
-  <div class="container-fluid">
-    <div class="mx-auto text-center">
-      <a class="navbar-brand">🚚 Arham Freight Logistics</a>
-    </div>
-    <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse justify-content-end" id="navbarMenu">
-      <ul class="navbar-nav">
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">☰ Menu</a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="#" id="logoutBtn">🚪 Logout</a></li>
-          </ul>
-        </li>
-      </ul>
-    </div>
+ <div class="container-fluid">
+  <div class="mx-auto text-center"><a class="navbar-brand fw-bold">🚚 Arham Freight Logistics</a></div>
+  <div class="dropdown">
+   <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">☰ Menu</a>
+   <ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="index.html">🚪 Logout</a></li></ul>
   </div>
+ </div>
 </nav>
 
-<div class="main-content" style="margin-top:70px;">
+<div class="main-content">
  <div class="d-flex justify-content-between align-items-center mb-3">
   <div>
    <h2 class="mb-1">Accounts Ledger</h2>
@@ -223,91 +142,6 @@ table.ledger{width:100%;min-width:1450px;border-collapse:collapse;font-size:11px
   </div>
  </div>
 </div>
-
-<!-- Dashboard-equivalent authentication, role visibility and sidebar behavior -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyB9VfTFlYpAjEOryx5tUx8Sq0LGKIjwgYU",
-    authDomain: "arhamfreight.firebaseapp.com",
-    projectId: "arhamfreight",
-    storageBucket: "arhamfreight.firebasestorage.app",
-    messagingSenderId: "113027178773",
-    appId: "1:113027178773:web:e644cd60f86bbbee06c91c",
-    measurementId: "G-FQ4NX3F1HZ"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  await setPersistence(auth, browserSessionPersistence);
-  const db = getFirestore(app);
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return (window.location.href = "index.html");
-
-    const email = user.email;
-    const isAdmin = email === "owaiswahed7224@gmail.com";
-
-    if (isAdmin) {
-      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "block");
-      document.querySelectorAll(".client-feature").forEach(el => el.style.display = "block");
-    } else {
-      document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
-      const ref = doc(db, "users", email);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data();
-        const features = ["shipBook", "searchBook", "trackShip", "rateInq", "manifestMenu", "accountsMenu"];
-        features.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.style.display = data[id] ? "block" : "none";
-        });
-      }
-    }
-  });
-
-  document.querySelectorAll(".sidebar-group .group-toggle").forEach(toggle => {
-    toggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      const group = toggle.closest(".sidebar-group");
-      group.classList.toggle("open");
-    });
-  });
-
-  const currentPage = (window.location.pathname.split("/").pop() || "dashboard.html").toLowerCase();
-  document.querySelectorAll(".sidebar a[href]").forEach(link => {
-    link.classList.remove("active");
-    const href = link.getAttribute("href");
-    if (!href || href === "#" || href === "javascript:void(0)") return;
-    try {
-      const target = new URL(href, window.location.href);
-      const targetPage = (target.pathname.split("/").pop() || "dashboard.html").toLowerCase();
-      if (targetPage === currentPage) link.classList.add("active");
-    } catch (e) {}
-  });
-
-  document.querySelectorAll(".sidebar a[href]").forEach(link => {
-    link.addEventListener("click", () => {
-      if (link.getAttribute("href") === "#" || link.classList.contains("group-toggle")) return;
-      document.querySelectorAll(".sidebar a[href]").forEach(item => item.classList.remove("active"));
-      link.classList.add("active");
-    });
-  });
-
-  document.getElementById("logoutBtn").addEventListener("click", async (e) => {
-    e.preventDefault();
-    sessionStorage.removeItem("selectedShipment");
-    sessionStorage.removeItem("bookingOpenMode");
-    sessionStorage.removeItem("bookingRowNumber");
-    localStorage.removeItem("selectedShipment");
-    localStorage.removeItem("bookingOpenMode");
-    localStorage.removeItem("bookingRowNumber");
-    try { await signOut(auth); } finally { window.location.href = "index.html"; }
-  });
-</script>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -401,7 +235,7 @@ function renderLedger(data){
     ? `<b>Sender:</b> ${esc(t.sender||"")}<br><b>Consignee:</b> ${esc(t.consignee||"")}<br>${esc(t.description||"")}`
     : `<b>${esc(t.description||"Payment Received")}</b>`;
   return `<tr class="${t.type==="CN"?"shipment":"payment"}">
-   <td>${esc(t.date||"")}</td><td>${esc(t.type||"")}</td><td>${esc(t.awbNumber||t.awb_number||t.awb||"")}</td><td>${esc(t.bookingDate||"")}</td>
+   <td>${esc(t.date||"")}</td><td>${esc(t.type||"")}</td><td>${esc(t.awbNumber||t.awb_number||t.awb||t.number||"")}</td><td>${esc(t.bookingDate||"")}</td>
    <td>${esc(t.destination||"")}</td><td>${esc(t.trackingNo||"")}</td><td class="num">${esc(t.pieces??"")}</td>
    <td class="num">${esc(t.weight??"")}</td><td class="num">${esc(t.chargedWeight??"")}</td><td>${esc(t.shipmentType||"")}</td>
    <td>${esc(t.service||"")}</td><td>${desc}</td><td class="num">${t.rate===""?"":money(t.rate)}</td>
@@ -428,7 +262,7 @@ function exportExcel(){
   ["Date","Type","No.","Booking Date","Dest","Tracking No.","PKGS","Weight","Charged Weight","Shipment Type","Service","Sender / Consignee / Particulars","Rate/KG","Document Amount","Debit","Credit","Balance","D/C"]
  ];
  (ledgerData.transactions||[]).forEach(t=>rows.push([
-  t.date||"",t.type||"",t.awbNumber||t.awb_number||t.awb||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",t.shipmentType||"",t.service||"",
+  t.date||"",t.type||"",t.awbNumber||t.awb_number||t.awb||t.number||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",t.shipmentType||"",t.service||"",
   (t.type==="CN"?("Sender: "+(t.sender||"")+" | Consignee: "+(t.consignee||"")+" | "+(t.description||"")):(t.description||"Payment Received")),
   t.rate===""?"":t.rate,t.chargeAmount||"",t.debit||"",t.credit||"",t.balance||0,t.dc||""
  ]));
@@ -463,7 +297,7 @@ function exportPdf(){
  const head=[["Date","Type","No. (AWB)","Book Date","Dest","Tracking No.","PKGS","Weight","Chg Wt","Shipment Type","Service","Sender / Consignee / Particulars","Rate/KG","Amount","Debit","Credit","Balance","D/C"]];
  const foot=[["TOTAL","","","","","","","","","","","","","",money(totalDebit),money(totalCredit),money(Math.abs(closing)),dc]];
  const body=(ledgerData.transactions||[]).map(t=>[
-  t.date||"",t.type||"",t.awbNumber||t.awb_number||t.awb||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",
+  t.date||"",t.type||"",t.awbNumber||t.awb_number||t.awb||t.number||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",
   t.shipmentType||"",t.service||"",
   t.type==="CN"?("Sender: "+(t.sender||"")+" | Consignee: "+(t.consignee||"")+" | "+(t.description||"")):(t.description||"Payment Received"),
   t.rate===""?"":money(t.rate),t.chargeAmount?money(t.chargeAmount):"",t.debit?money(t.debit):"",t.credit?money(t.credit):"",money(t.balance),t.dc||""
@@ -490,7 +324,6 @@ $("#excelBtn").on("click",exportExcel);
 $("#pdfBtn").on("click",exportPdf);
 $(document).ready(loadAccounts);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
