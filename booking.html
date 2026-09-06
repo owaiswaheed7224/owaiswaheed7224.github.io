@@ -1284,7 +1284,7 @@ const codCurrencies = [
       calculateWeightPerforma();
     }
 
-    function loadShipmentFromSearching() {
+    async function loadShipmentFromSearching() {
       const raw = sessionStorage.getItem("selectedShipment");
       const storedMode = sessionStorage.getItem("bookingOpenMode");
       const urlMode = new URLSearchParams(window.location.search).get("mode");
@@ -1294,14 +1294,58 @@ const codCurrencies = [
       if (!raw || !mode) return;
 
       try {
-        const record = JSON.parse(raw);
+        let record = JSON.parse(raw);
 
-        bookingRowNumber = record._rowNumber || storedRowNumber || "";
+        /*
+         * Searching page may carry a lightweight/older record. Before opening
+         * the booking form, fetch the complete booking again by AWB so all
+         * saved fields (country, service, COD, invoice, weight performa, etc.)
+         * are loaded from the current Google Sheet record.
+         */
+        const awb = String(
+          record.awb_number || record.awb || ""
+        ).trim();
+
+        if (awb) {
+          const formAction = document.getElementById("bookingForm").getAttribute("action");
+          const url = formAction +
+            "?action=search&awb=" + encodeURIComponent(awb);
+
+          try {
+            const response = await fetch(url, {
+              method: "GET",
+              cache: "no-store"
+            });
+
+            if (response.ok) {
+              const freshData = await response.json();
+
+              if (freshData && freshData.success &&
+                  Array.isArray(freshData.records) &&
+                  freshData.records.length > 0) {
+                const freshRecord = freshData.records.find(function (item) {
+                  return String(item.awb_number || item.awb || "").trim() === awb;
+                }) || freshData.records[0];
+
+                // Keep the row number from the fresh record whenever supplied.
+                record = Object.assign({}, record, freshRecord);
+              }
+            }
+          } catch (fetchErr) {
+            console.warn("Unable to refresh shipment from server. Using selected record.", fetchErr);
+          }
+        }
+
+        bookingRowNumber =
+          record._rowNumber ||
+          record.rowNumber ||
+          storedRowNumber ||
+          "";
+
+        // Populate the COMPLETE record first.
         populateBookingFromRecord(record);
 
         if (String(mode).toLowerCase() === "edit") {
-          // IMPORTANT: populate first, then unlock. This guarantees that
-          // Searching -> Edit always opens the COMPLETE booking form in edit mode.
           bookingEditMode = true;
           setBookingFormEditable(true);
           $("#toggleEdit").text("✏️ Editing Shipment").hide();
@@ -1310,26 +1354,19 @@ const codCurrencies = [
           bookingEditMode = false;
           clearAndFreezeBooking();
 
-          // View/Preview mode: keep the shipment read-only.
           $("#toggleEdit").hide();
           $("#printBooking").show();
         }
 
-        /*
-         * IMPORTANT:
-         * Searching.html uses sessionStorage only as a one-time hand-off
-         * to booking.html. Once the shipment has been loaded successfully,
-         * remove that hand-off data immediately.
-         *
-         * This prevents the old shipment from appearing again when the
-         * user navigates away and later returns to booking.html, and also
-         * prevents F5 from restoring the previous View/Edit shipment.
-         */
+        // Save the refreshed complete record as the one-time hand-off copy.
+        // This also helps any code that reads the selected shipment immediately.
+        sessionStorage.setItem("selectedShipment", JSON.stringify(record));
+
+        // Hand-off is complete; prevent the old shipment from being restored later.
         sessionStorage.removeItem("selectedShipment");
         sessionStorage.removeItem("bookingOpenMode");
         sessionStorage.removeItem("bookingRowNumber");
 
-        // Also clear any legacy localStorage copies, if they exist.
         localStorage.removeItem("selectedShipment");
         localStorage.removeItem("bookingOpenMode");
         localStorage.removeItem("bookingRowNumber");
@@ -1337,12 +1374,12 @@ const codCurrencies = [
       } catch (err) {
         console.error("Unable to load selected shipment", err);
 
-        // If the hand-off data is invalid, don't leave it stuck in storage.
         sessionStorage.removeItem("selectedShipment");
         sessionStorage.removeItem("bookingOpenMode");
         sessionStorage.removeItem("bookingRowNumber");
       }
     }
+
 
     // Sidebar navigation / active-page highlighting.
     // The links above point to the same portal pages used by the dashboard/status pages.
