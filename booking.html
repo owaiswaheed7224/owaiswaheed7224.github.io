@@ -1285,101 +1285,66 @@ const codCurrencies = [
     }
 
     async function loadShipmentFromSearching() {
+      const params = new URLSearchParams(window.location.search);
+      const urlMode = String(params.get("mode") || "").trim().toLowerCase();
+      const urlAwb = String(params.get("awb") || "").trim();
+      const urlRow = String(params.get("rowNumber") || "").trim();
+      const storedMode = String(sessionStorage.getItem("bookingOpenMode") || "").trim().toLowerCase();
+      const storedRowNumber = String(sessionStorage.getItem("bookingRowNumber") || "").trim();
       const raw = sessionStorage.getItem("selectedShipment");
-      const storedMode = sessionStorage.getItem("bookingOpenMode");
-      const urlMode = new URLSearchParams(window.location.search).get("mode");
-      const mode = storedMode || urlMode || "";
-      const storedRowNumber = sessionStorage.getItem("bookingRowNumber");
-
-      if (!raw || !mode) return;
-
+      const mode = urlMode || storedMode;
+      if (!mode) return;
+      let record = null;
       try {
-        let record = JSON.parse(raw);
-
-        /*
-         * Searching page may carry a lightweight/older record. Before opening
-         * the booking form, fetch the complete booking again by AWB so all
-         * saved fields (country, service, COD, invoice, weight performa, etc.)
-         * are loaded from the current Google Sheet record.
-         */
-        const awb = String(
-          record.awb_number || record.awb || ""
-        ).trim();
-
+        if (raw) { try { record = JSON.parse(raw); } catch (e) { record = null; } }
+        const awb = urlAwb || String(record?.awb_number || record?.awb || "").trim();
         if (awb) {
           const formAction = document.getElementById("bookingForm").getAttribute("action");
-          const url = formAction +
-            "?action=search&awb=" + encodeURIComponent(awb);
-
-          try {
-            const response = await fetch(url, {
+          const freshData = await new Promise(function(resolve, reject) {
+            $.ajax({
+              url: formAction,
               method: "GET",
-              cache: "no-store"
+              data: { action: "search", awb: awb },
+              dataType: "jsonp",
+              cache: false,
+              timeout: 20000,
+              success: resolve,
+              error: reject
             });
-
-            if (response.ok) {
-              const freshData = await response.json();
-
-              if (freshData && freshData.success &&
-                  Array.isArray(freshData.records) &&
-                  freshData.records.length > 0) {
-                const freshRecord = freshData.records.find(function (item) {
-                  return String(item.awb_number || item.awb || "").trim() === awb;
-                }) || freshData.records[0];
-
-                // Keep the row number from the fresh record whenever supplied.
-                record = Object.assign({}, record, freshRecord);
-              }
-            }
-          } catch (fetchErr) {
-            console.warn("Unable to refresh shipment from server. Using selected record.", fetchErr);
+          });
+          if (freshData && freshData.success && Array.isArray(freshData.records)) {
+            const freshRecord = freshData.records.find(function(item) {
+              return String(item.awb_number || item.awb || "").trim().toLowerCase() === awb.toLowerCase();
+            });
+            if (freshRecord) record = Object.assign({}, record || {}, freshRecord);
           }
         }
-
-        bookingRowNumber =
-          record._rowNumber ||
-          record.rowNumber ||
-          storedRowNumber ||
-          "";
-
-        // Populate the COMPLETE record first.
+        if (!record) throw new Error("Shipment record load nahi ho saka.");
+        bookingRowNumber = record._rowNumber || record.rowNumber || urlRow || storedRowNumber || "";
         populateBookingFromRecord(record);
-
-        if (String(mode).toLowerCase() === "edit") {
+        if (mode === "edit") {
           bookingEditMode = true;
           setBookingFormEditable(true);
-          $("#toggleEdit").text("✏️ Editing Shipment").hide();
+          $("#toggleEdit").hide();
           $("#printBooking").show();
         } else {
           bookingEditMode = false;
           clearAndFreezeBooking();
-
           $("#toggleEdit").hide();
           $("#printBooking").show();
         }
-
-        // Save the refreshed complete record as the one-time hand-off copy.
-        // This also helps any code that reads the selected shipment immediately.
-        sessionStorage.setItem("selectedShipment", JSON.stringify(record));
-
-        // Hand-off is complete; prevent the old shipment from being restored later.
+      } catch (err) {
+        console.error("Unable to load selected shipment", err);
+        alert(err && err.message ? err.message : "Shipment load nahi ho saki. Please Searching Booking se dobara open karein.");
+      } finally {
         sessionStorage.removeItem("selectedShipment");
         sessionStorage.removeItem("bookingOpenMode");
         sessionStorage.removeItem("bookingRowNumber");
-
         localStorage.removeItem("selectedShipment");
         localStorage.removeItem("bookingOpenMode");
         localStorage.removeItem("bookingRowNumber");
-
-      } catch (err) {
-        console.error("Unable to load selected shipment", err);
-
-        sessionStorage.removeItem("selectedShipment");
-        sessionStorage.removeItem("bookingOpenMode");
-        sessionStorage.removeItem("bookingRowNumber");
       }
     }
-
 
     // Sidebar navigation / active-page highlighting.
     // The links above point to the same portal pages used by the dashboard/status pages.
