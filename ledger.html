@@ -207,17 +207,24 @@ async function searchLedger(){
 }
 
 function renderLedger(data){
- const a=data.account||{}, s=data.summary||{};
- document.getElementById("opening").textContent=money(a.openingBalance);
- document.getElementById("debit").textContent=money(s.totalDebit);
- document.getElementById("credit").textContent=money(s.totalCredit);
- document.getElementById("closing").textContent=money(s.closingBalance)+" "+(s.dc||"Dr");
- document.getElementById("tfootDebit").textContent=money(s.totalDebit);
- document.getElementById("tfootCredit").textContent=money(s.totalCredit);
- document.getElementById("tfootBalance").textContent=money(s.closingBalance);
+ const a=data.account||{};
+ const s=data.summary||{};
+ const period=data.period||{};
+ const opening=(data.openingBalance!==undefined?data.openingBalance:a.openingBalance)||0;
+ const totalDebit=(data.totalDebit!==undefined?data.totalDebit:s.totalDebit)||0;
+ const totalCredit=(data.totalCredit!==undefined?data.totalCredit:s.totalCredit)||0;
+ const closing=(data.closingBalance!==undefined?data.closingBalance:s.closingBalance)||0;
+ const dc=data.dc||s.dc||"Dr";
+ document.getElementById("opening").textContent=money(opening);
+ document.getElementById("debit").textContent=money(totalDebit);
+ document.getElementById("credit").textContent=money(totalCredit);
+ document.getElementById("closing").textContent=money(Math.abs(closing))+" "+dc;
+ document.getElementById("tfootDebit").textContent=money(totalDebit);
+ document.getElementById("tfootCredit").textContent=money(totalCredit);
+ document.getElementById("tfootBalance").textContent=money(Math.abs(closing));
  document.getElementById("ledgerTitle").textContent="Accounts Ledger — "+(a.accountName||"");
- document.getElementById("ledgerPeriod").textContent="Account Code: "+(a.accountCode||"")+" | From: "+((data.period||{}).startDate||"All")+" | To: "+((data.period||{}).endDate||"All");
- document.getElementById("counts").textContent=(s.shipmentCount||0)+" Shipments | "+(s.paymentCount||0)+" Payments";
+ document.getElementById("ledgerPeriod").textContent="Account Code: "+(a.accountCode||"")+" | From: "+(period.startDate||"All")+" | To: "+(period.endDate||"All");
+ document.getElementById("counts").textContent=(data.shipmentCount!==undefined?data.shipmentCount:(s.shipmentCount||0))+" Shipments | "+(data.paymentCount!==undefined?data.paymentCount:(s.paymentCount||0))+" Payments";
 
  const body=document.getElementById("ledgerBody");
  if(!data.transactions||!data.transactions.length){
@@ -240,58 +247,76 @@ function renderLedger(data){
 
 function exportExcel(){
  if(!ledgerData){setStatus("Please search the ledger first.",false);return}
- const a=ledgerData.account,s=ledgerData.summary;
+ const a=ledgerData.account||{}, s=ledgerData.summary||{}, p=ledgerData.period||{};
+ const opening=(ledgerData.openingBalance!==undefined?ledgerData.openingBalance:a.openingBalance)||0;
+ const totalDebit=(ledgerData.totalDebit!==undefined?ledgerData.totalDebit:s.totalDebit)||0;
+ const totalCredit=(ledgerData.totalCredit!==undefined?ledgerData.totalCredit:s.totalCredit)||0;
+ const closing=(ledgerData.closingBalance!==undefined?ledgerData.closingBalance:s.closingBalance)||0;
+ const dc=ledgerData.dc||s.dc||"Dr";
  const rows=[
   ["ARHAM FREIGHT LOGISTICS — ACCOUNTS LEDGER"],
-  ["Account Code",a.accountCode],["Account Name",a.accountName],
-  ["From",ledgerData.period.startDate||"All"],["To",ledgerData.period.endDate||"All"],
-  ["Opening Balance",a.openingBalance],["Total Debit",s.totalDebit],["Total Credit",s.totalCredit],["Closing Balance",s.closingBalance,s.dc],
+  ["Account Code",a.accountCode||""],["Account Name",a.accountName||""],
+  ["From",p.startDate||"All"],["To",p.endDate||"All"],
+  ["Opening Balance",opening],["Total Debit / Charges",totalDebit],["Total Credit / Payments",totalCredit],["Closing Balance",Math.abs(closing),dc],
   [],
   ["Date","Type","No.","Booking Date","Dest","Tracking No.","PKGS","Weight","Charged Weight","Shipment Type","Service","Sender / Consignee / Particulars","Rate/KG","Document Amount","Debit","Credit","Balance","D/C"]
  ];
- ledgerData.transactions.forEach(t=>rows.push([
-  t.date,t.type,t.number,t.bookingDate,t.destination,t.trackingNo,t.pieces,t.weight,t.chargedWeight,t.shipmentType,t.service,
+ (ledgerData.transactions||[]).forEach(t=>rows.push([
+  t.date||"",t.type||"",t.number||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",t.shipmentType||"",t.service||"",
   (t.type==="CN"?("Sender: "+(t.sender||"")+" | Consignee: "+(t.consignee||"")+" | "+(t.description||"")):(t.description||"Payment Received")),
-  t.rate,t.chargeAmount,t.debit,t.credit,t.balance,t.dc
+  t.rate===""?"":t.rate,t.chargeAmount||"",t.debit||"",t.credit||"",t.balance||0,t.dc||""
  ]));
+ rows.push([],["TOTAL","","","","","","","","","","","","","",totalDebit,totalCredit,Math.abs(closing),dc]);
  const ws=XLSX.utils.aoa_to_sheet(rows);
- ws["!cols"]=[12,8,16,12,10,20,7,10,13,14,25,50,12,15,15,15,15,7].map(w=>({wch:w}));
+ ws["!cols"]=[12,8,16,12,10,20,7,10,13,14,25,55,12,16,16,16,16,7].map(w=>({wch:w}));
+ ws["!freeze"]={xSplit:0,ySplit:11};
  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Ledger");
  const safe=(a.accountName||a.accountCode||"Account").replace(/[^a-z0-9]+/gi,"_");
  XLSX.writeFile(wb,safe+"_Accounts_Ledger.xlsx");
+ setStatus("Excel file downloaded successfully.");
 }
 
 function exportPdf(){
  if(!ledgerData){setStatus("Please search the ledger first.",false);return}
+ if(!window.jspdf || !window.jspdf.jsPDF){setStatus("PDF library is not loaded. Please refresh the page and try again.",false);return}
  const {jsPDF}=window.jspdf;
  const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
- const a=ledgerData.account,s=ledgerData.summary,p=ledgerData.period;
+ const a=ledgerData.account||{}, s=ledgerData.summary||{}, p=ledgerData.period||{};
+ const opening=(ledgerData.openingBalance!==undefined?ledgerData.openingBalance:a.openingBalance)||0;
+ const totalDebit=(ledgerData.totalDebit!==undefined?ledgerData.totalDebit:s.totalDebit)||0;
+ const totalCredit=(ledgerData.totalCredit!==undefined?ledgerData.totalCredit:s.totalCredit)||0;
+ const closing=(ledgerData.closingBalance!==undefined?ledgerData.closingBalance:s.closingBalance)||0;
+ const dc=ledgerData.dc||s.dc||"Dr";
  doc.setFont("helvetica","bold");doc.setFontSize(13);doc.text("ARHAM FREIGHT LOGISTICS",148,10,{align:"center"});
  doc.setFontSize(10);doc.text("Accounts Ledger (Debtors)",148,16,{align:"center"});
- doc.setFont("helvetica","normal");doc.setFontSize(8);
- doc.text("Account Code: "+(a.accountCode||""),10,24);
- doc.text("Account Name: "+(a.accountName||""),10,29);
- doc.text("From: "+(p.startDate||"All")+"   To: "+(p.endDate||"All"),10,34);
- doc.text("Opening Balance: "+money(a.openingBalance)+"    Debit: "+money(s.totalDebit)+"    Credit: "+money(s.totalCredit)+"    Closing: "+money(s.closingBalance)+" "+s.dc,10,39);
- const head=[["Date","Type","No.","Book Date","Dest","Tracking No.","PKGS","Weight","Chg Wt","Shipment Type","Service","Sender / Consignee / Particulars","Rate/KG","Amount","Debit","Credit","Balance","D/C"]];
- const body=ledgerData.transactions.map(t=>[
+ doc.setFont("helvetica","normal");doc.setFontSize(7);
+ doc.text("Account Code: "+(a.accountCode||""),7,23);
+ doc.text("Account Name: "+(a.accountName||""),7,28);
+ doc.text("From: "+(p.startDate||"All")+"   To: "+(p.endDate||"All"),7,33);
+ doc.text("Opening: "+money(opening)+"    Total Debit: "+money(totalDebit)+"    Total Credit: "+money(totalCredit)+"    Closing: "+money(Math.abs(closing))+" "+dc,7,38);
+ const head=[["Date","Type","No. (AWB)","Book Date","Dest","Tracking No.","PKGS","Weight","Chg Wt","Shipment Type","Service","Sender / Consignee / Particulars","Rate/KG","Amount","Debit","Credit","Balance","D/C"]];
+ const foot=[["TOTAL","","","","","","","","","","","","","",money(totalDebit),money(totalCredit),money(Math.abs(closing)),dc]];
+ const body=(ledgerData.transactions||[]).map(t=>[
   t.date||"",t.type||"",t.number||"",t.bookingDate||"",t.destination||"",t.trackingNo||"",t.pieces??"",t.weight??"",t.chargedWeight??"",
   t.shipmentType||"",t.service||"",
   t.type==="CN"?("Sender: "+(t.sender||"")+" | Consignee: "+(t.consignee||"")+" | "+(t.description||"")):(t.description||"Payment Received"),
   t.rate===""?"":money(t.rate),t.chargeAmount?money(t.chargeAmount):"",t.debit?money(t.debit):"",t.credit?money(t.credit):"",money(t.balance),t.dc||""
  ]);
  doc.autoTable({
-  head,body,startY:44,theme:"grid",styles:{fontSize:5.6,cellPadding:1.2,overflow:"linebreak",valign:"top"},
-  headStyles:{fontStyle:"bold",halign:"center"},columnStyles:{11:{cellWidth:39},12:{cellWidth:13},13:{cellWidth:16},14:{cellWidth:16},15:{cellWidth:16},16:{cellWidth:18},17:{cellWidth:8}},
-  margin:{left:7,right:7,top:44,bottom:14},showHead:"everyPage",
-  didDrawPage:function(d){
+  head,body,foot,startY:43,theme:"grid",styles:{fontSize:5.3,cellPadding:1.1,overflow:"linebreak",valign:"top"},
+  headStyles:{fontStyle:"bold",halign:"center"},
+  footStyles:{fontStyle:"bold",halign:"right"},
+  columnStyles:{2:{cellWidth:22},11:{cellWidth:42},12:{cellWidth:13},13:{cellWidth:15},14:{cellWidth:15},15:{cellWidth:15},16:{cellWidth:17},17:{cellWidth:8}},
+  margin:{left:5,right:5,top:43,bottom:15},showHead:"everyPage",
+  didDrawPage:function(){
    const page=doc.internal.getNumberOfPages();
-   doc.setFontSize(6);doc.text("Arham Freight Logistics | Accounts Ledger",7,205);
-   doc.text("Page "+page,290,205,{align:"right"});
+   doc.setFontSize(6);doc.text("Arham Freight Logistics | Accounts Ledger",5,205);
+   doc.text("Page "+page,292,205,{align:"right"});
   }
  });
  const safe=(a.accountName||a.accountCode||"Account").replace(/[^a-z0-9]+/gi,"_");
  doc.save(safe+"_Accounts_Ledger.pdf");
+ setStatus("PDF file downloaded successfully.");
 }
 
 $("#searchBtn").on("click",searchLedger);
