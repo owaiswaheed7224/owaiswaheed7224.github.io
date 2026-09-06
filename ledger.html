@@ -157,10 +157,39 @@ function jsonp(action, params={}){
   const cb="ledger_cb_"+Date.now()+"_"+Math.floor(Math.random()*100000);
   const script=document.createElement("script");
   const q=new URLSearchParams({action,callback:cb,...params});
-  let timer=setTimeout(()=>{cleanup();reject(new Error("Request timed out."));},20000);
-  function cleanup(){clearTimeout(timer);delete window[cb];script.remove();}
-  window[cb]=data=>{cleanup();resolve(data)};
-  script.onerror=()=>{cleanup();reject(new Error("Apps Script connection failed."))};
+  let finished=false;
+
+  // Apps Script can occasionally be slow on a cold start. The old
+  // 20-second timeout was too aggressive for a ledger request.
+  const timeoutMs=60000;
+
+  const timer=setTimeout(()=>{
+   if(finished) return;
+   finished=true;
+   cleanup();
+   reject(new Error("Request timed out after 60 seconds. Please try again."));
+  },timeoutMs);
+
+  function cleanup(){
+   clearTimeout(timer);
+   try{delete window[cb]}catch(e){}
+   if(script.parentNode) script.parentNode.removeChild(script);
+  }
+
+  window[cb]=data=>{
+   if(finished) return;
+   finished=true;
+   cleanup();
+   resolve(data);
+  };
+
+  script.onerror=()=>{
+   if(finished) return;
+   finished=true;
+   cleanup();
+   reject(new Error("Apps Script connection failed."));
+  };
+
   script.src=API_URL+"?"+q.toString();
   document.body.appendChild(script);
  });
@@ -171,10 +200,31 @@ function setStatus(msg,ok=true){const e=document.getElementById("status");e.text
 
 async function loadAccounts(){
  try{
-  const res=await jsonp("listaccounts",{});
-  if(!res.success) throw new Error(res.message||"Unable to load accounts.");
+  setStatus("Loading accounts...");
+  const cacheKey="arham_ledger_accounts_v1";
+  const cacheTimeKey=cacheKey+"_time";
+  const cached=localStorage.getItem(cacheKey);
+  const cachedTime=Number(localStorage.getItem(cacheTimeKey)||0);
+
+  let res=null;
+
+  if(cached && Date.now()-cachedTime < 5*60*1000){
+   try{res=JSON.parse(cached)}catch(e){res=null}
+  }
+
+  if(!res){
+   res=await jsonp("listaccounts",{});
+   if(res && res.success){
+    localStorage.setItem(cacheKey,JSON.stringify(res));
+    localStorage.setItem(cacheTimeKey,String(Date.now()));
+   }
+  }
+
+  if(!res || !res.success) throw new Error((res&&res.message)||"Unable to load accounts.");
+
   const sel=$("#accountSelect");
   sel.empty().append(new Option("Select Account Code / Account Name",""));
+
   (res.accounts||[]).forEach(a=>{
    const text=(a.accountCode||"")+" — "+(a.accountName||"");
    const opt=new Option(text,a.accountCode);
@@ -182,8 +232,18 @@ async function loadAccounts(){
    opt.dataset.name=a.accountName||"";
    sel.append(opt);
   });
-  sel.select2({placeholder:"Select Account Code / Account Name",allowClear:true,width:"100%"});
- }catch(e){setStatus(e.message,false)}
+
+  if(sel.hasClass("select2-hidden-accessible")) sel.select2("destroy");
+  sel.select2({
+   placeholder:"Select Account Code / Account Name",
+   allowClear:true,
+   width:"100%"
+  });
+
+  setStatus("Ready.");
+ }catch(e){
+  setStatus(e.message,false);
+ }
 }
 
 function validateDates(){
@@ -192,18 +252,52 @@ function validateDates(){
  return true;
 }
 
+let ledgerLoading=false;
+
 async function searchLedger(){
+ if(ledgerLoading) return;
  if(!validateDates()) return;
+
  const code=$("#accountSelect").val();
- if(!code){setStatus("Please select an account.",false);return}
+ if(!code){
+  setStatus("Please select an account.",false);
+  return;
+ }
+
  const opt=$("#accountSelect option:selected");
  const name=opt.data("name")||"";
- setStatus("Loading ledger...");
+
+ ledgerLoading=true;
+ const btn=document.getElementById("searchBtn");
+ const oldText=btn.innerHTML;
+ btn.disabled=true;
+ btn.innerHTML="⏳ Loading...";
+
+ setStatus("Loading ledger from Google Sheet...");
+
  try{
-  const res=await jsonp("accountledger",{accountCode:code,accountName:name,startDate:$("#startDate").val(),endDate:$("#endDate").val()});
-  if(!res.success) throw new Error(res.message||"Ledger could not be loaded.");
-  ledgerData=res;renderLedger(res);setStatus("Ledger loaded successfully.");
- }catch(e){ledgerData=null;setStatus(e.message,false)}
+  const res=await jsonp("accountledger",{
+   accountCode:code,
+   accountName:name,
+   startDate:$("#startDate").val(),
+   endDate:$("#endDate").val()
+  });
+
+  if(!res || !res.success){
+   throw new Error((res&&res.message)||"Ledger could not be loaded.");
+  }
+
+  ledgerData=res;
+  renderLedger(res);
+  setStatus("Ledger loaded successfully.");
+ }catch(e){
+  ledgerData=null;
+  setStatus(e.message,false);
+ }finally{
+  ledgerLoading=false;
+  btn.disabled=false;
+  btn.innerHTML=oldText;
+ }
 }
 
 function renderLedger(data){
