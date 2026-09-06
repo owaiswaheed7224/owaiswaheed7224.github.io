@@ -304,6 +304,25 @@
       display: none;
     }
 
+    .initial-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      border: 1px solid #dbe5f2;
+      border-radius: 8px;
+      background: #f8fbff;
+      color: #0d6efd;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .initial-loading.hidden {
+      display: none;
+    }
+
     @media (max-width: 900px) {
       .sidebar {
         width: 210px;
@@ -405,6 +424,10 @@
         </div>
 
         <div id="statusBox" class="status-box"></div>
+        <div id="initialLoading" class="initial-loading" aria-live="polite">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+          <span>Loading recent bookings...</span>
+        </div>
       </div>
     </div>
 
@@ -533,6 +556,7 @@
     const resultsBody = document.getElementById("resultsBody");
     const resultsTitle = document.getElementById("resultsTitle");
     const statusBox = document.getElementById("statusBox");
+    const initialLoading = document.getElementById("initialLoading");
     const selectAll = document.getElementById("selectAll");
     const voidModal = document.getElementById("voidModal");
     const voidModalMessage = document.getElementById("voidModalMessage");
@@ -610,8 +634,15 @@
     function openBooking(record, mode) {
       if (!record) return;
 
+      // Keep the COMPLETE backend record intact. Do not create a reduced
+      // preview object here because booking.html needs invoice + weight
+      // performa + country/service/COD fields for both View and Edit.
       sessionStorage.setItem("selectedShipment", JSON.stringify(record));
       sessionStorage.setItem("bookingOpenMode", mode);
+      sessionStorage.setItem(
+        "bookingRowNumber",
+        String(record._rowNumber || record.rowNumber || "")
+      );
 
       window.location.href = "booking.html?mode=" + encodeURIComponent(mode);
     }
@@ -953,6 +984,7 @@
         );
       } finally {
         searchBtn.disabled = false;
+        if (initialLoading) initialLoading.classList.add("hidden");
       }
     }
 
