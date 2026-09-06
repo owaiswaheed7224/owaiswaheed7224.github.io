@@ -1284,48 +1284,36 @@ const codCurrencies = [
       calculateWeightPerforma();
     }
 
-    async function loadShipmentFromSearching() {
+    function loadShipmentFromSearching() {
       const params = new URLSearchParams(window.location.search);
       const urlMode = String(params.get("mode") || "").trim().toLowerCase();
-      const urlAwb = String(params.get("awb") || "").trim();
       const urlRow = String(params.get("rowNumber") || "").trim();
       const storedMode = String(sessionStorage.getItem("bookingOpenMode") || "").trim().toLowerCase();
       const storedRowNumber = String(sessionStorage.getItem("bookingRowNumber") || "").trim();
       const raw = sessionStorage.getItem("selectedShipment");
       const mode = urlMode || storedMode;
-      if (!mode) return;
-      let record = null;
+
+      if (!raw || !mode) return;
+
       try {
-        if (raw) { try { record = JSON.parse(raw); } catch (e) { record = null; } }
-        const awb = urlAwb || String(record?.awb_number || record?.awb || "").trim();
-        if (awb) {
-          const formAction = document.getElementById("bookingForm").getAttribute("action");
-          const freshData = await new Promise(function(resolve, reject) {
-            $.ajax({
-              url: formAction,
-              method: "GET",
-              data: { action: "search", awb: awb },
-              dataType: "jsonp",
-              cache: false,
-              timeout: 20000,
-              success: resolve,
-              error: reject
-            });
-          });
-          if (freshData && freshData.success && Array.isArray(freshData.records)) {
-            const freshRecord = freshData.records.find(function(item) {
-              return String(item.awb_number || item.awb || "").trim().toLowerCase() === awb.toLowerCase();
-            });
-            if (freshRecord) record = Object.assign({}, record || {}, freshRecord);
-          }
+        const record = JSON.parse(raw);
+        if (!record || typeof record !== "object") {
+          throw new Error("Invalid shipment record");
         }
-        if (!record) throw new Error("Shipment record load nahi ho saka.");
-        bookingRowNumber = record._rowNumber || record.rowNumber || urlRow || storedRowNumber || "";
+
+        bookingRowNumber = String(
+          record._rowNumber || record.rowNumber || urlRow || storedRowNumber || ""
+        );
+
+        // IMPORTANT: Use the COMPLETE record already returned by Searching Booking.
+        // Do not make a second API request here. Searching Booking already loaded
+        // the shipment from Code.gs; the extra request was causing the load error.
         populateBookingFromRecord(record);
+
         if (mode === "edit") {
           bookingEditMode = true;
           setBookingFormEditable(true);
-          $("#toggleEdit").hide();
+          $("#toggleEdit").text("✏️ Editing Shipment").hide();
           $("#printBooking").show();
         } else {
           bookingEditMode = false;
@@ -1333,16 +1321,18 @@ const codCurrencies = [
           $("#toggleEdit").hide();
           $("#printBooking").show();
         }
-      } catch (err) {
-        console.error("Unable to load selected shipment", err);
-        alert(err && err.message ? err.message : "Shipment load nahi ho saki. Please Searching Booking se dobara open karein.");
-      } finally {
+
+        // Clear one-time handoff only AFTER successful population.
         sessionStorage.removeItem("selectedShipment");
         sessionStorage.removeItem("bookingOpenMode");
         sessionStorage.removeItem("bookingRowNumber");
         localStorage.removeItem("selectedShipment");
         localStorage.removeItem("bookingOpenMode");
         localStorage.removeItem("bookingRowNumber");
+
+      } catch (err) {
+        console.error("Unable to load selected shipment", err);
+        alert("Shipment load nahi ho saki. Please Searching Booking se dobara open karein.");
       }
     }
 
