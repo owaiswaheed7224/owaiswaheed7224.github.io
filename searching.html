@@ -633,18 +633,16 @@
 
     function openBooking(record, mode) {
       if (!record) return;
-
-      // Keep the COMPLETE backend record intact. Do not create a reduced
-      // preview object here because booking.html needs invoice + weight
-      // performa + country/service/COD fields for both View and Edit.
+      const awb = String(record.awb_number || record.awb || "").trim();
+      const rowNumber = String(record._rowNumber || record.rowNumber || "").trim();
       sessionStorage.setItem("selectedShipment", JSON.stringify(record));
       sessionStorage.setItem("bookingOpenMode", mode);
-      sessionStorage.setItem(
-        "bookingRowNumber",
-        String(record._rowNumber || record.rowNumber || "")
-      );
-
-      window.location.href = "booking.html?mode=" + encodeURIComponent(mode);
+      sessionStorage.setItem("bookingRowNumber", rowNumber);
+      const query = new URLSearchParams();
+      query.set("mode", mode);
+      if (awb) query.set("awb", awb);
+      if (rowNumber) query.set("rowNumber", rowNumber);
+      window.location.href = "booking.html?" + query.toString();
     }
 
     window.viewBooking = function(index) {
