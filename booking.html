@@ -1286,7 +1286,9 @@ const codCurrencies = [
 
     function loadShipmentFromSearching() {
       const raw = sessionStorage.getItem("selectedShipment");
-      const mode = sessionStorage.getItem("bookingOpenMode");
+      const storedMode = sessionStorage.getItem("bookingOpenMode");
+      const urlMode = new URLSearchParams(window.location.search).get("mode");
+      const mode = storedMode || urlMode || "";
       const storedRowNumber = sessionStorage.getItem("bookingRowNumber");
 
       if (!raw || !mode) return;
@@ -1297,16 +1299,18 @@ const codCurrencies = [
         bookingRowNumber = record._rowNumber || storedRowNumber || "";
         populateBookingFromRecord(record);
 
-        if (mode === "edit") {
+        if (String(mode).toLowerCase() === "edit") {
+          // IMPORTANT: populate first, then unlock. This guarantees that
+          // Searching -> Edit always opens the COMPLETE booking form in edit mode.
           bookingEditMode = true;
           setBookingFormEditable(true);
-          $("#toggleEdit").text("✏️ Editing Shipment");
+          $("#toggleEdit").text("✏️ Editing Shipment").hide();
+          $("#printBooking").show();
         } else {
           bookingEditMode = false;
           clearAndFreezeBooking();
 
           // View/Preview mode: keep the shipment read-only.
-          // Do not show the Edit button at the bottom.
           $("#toggleEdit").hide();
           $("#printBooking").show();
         }
@@ -1468,8 +1472,11 @@ const codCurrencies = [
             $("#accountLoading").hide();
             $account.prop("disabled", false);
 
-            // Respect the page's initial read-only state.
-            if ($("#bookingForm").hasClass("readonly")) {
+            // Respect the actual shipment mode. Edit mode must remain editable
+            // even after the asynchronous Accounts request completes.
+            if (bookingEditMode) {
+              $account.prop("disabled", false);
+            } else if ($("#bookingForm").hasClass("readonly")) {
               $account.prop("disabled", true);
             }
           }
