@@ -361,6 +361,20 @@ input:focus{
 .timeline{border-left:3px solid #cfe2ff;margin-left:10px;padding-left:28px}
 .event{position:relative;padding:0 0 25px}
 .event:last-child{padding-bottom:0}
+.event-remarks{
+  margin-top:9px;
+  padding:9px 12px;
+  background:#f7fbff;
+  border:1px solid var(--line);
+  border-radius:8px;
+  color:#334155;
+  font-size:13px;
+  line-height:1.5;
+  word-break:break-word;
+}
+.event-remarks strong{
+  color:var(--ink);
+}
 .event-dot{
   position:absolute;left:-37px;top:2px;
   width:15px;height:15px;border-radius:50%;
@@ -490,7 +504,7 @@ footer{
     <div class="hero-copy">
       <div class="kicker"><i></i> ARHAM FREIGHT LOGISTICS</div>
       <h1>TRACK YOUR<br>SHIPMENT</h1>
-      <p>Enter your tracking number to get the latest updates on your shipment status.</p>
+      <p>Enter your AWB, Reference Number or Tracking Number to get the latest updates on your shipment status.</p>
     </div>
 
     <div class="visual" aria-hidden="true">
@@ -514,7 +528,7 @@ footer{
     <div class="search-icon">▣</div>
 
     <input id="trackingNo" type="text"
-      placeholder="Enter Tracking Number"
+      placeholder="Enter AWB / Reference Number / Tracking Number"
       autocomplete="off">
 
     <button class="track-btn" onclick="trackShipment()">⌕ &nbsp; Track Now</button>
@@ -527,7 +541,7 @@ footer{
 
 <div id="result">
   <div style="text-align:center;color:#718096;padding:25px">
-    Enter a tracking number above to view shipment details.
+    Enter an AWB, Reference Number or Tracking Number above to view shipment details.
   </div>
 </div>
 
@@ -674,7 +688,7 @@ function trackShipment(){
   const result=document.getElementById("result");
 
   if(!no){
-    result.innerHTML='<div class="error"><h3>Please Enter Tracking Number</h3><p>Enter your tracking number and try again.</p></div>';
+    result.innerHTML='<div class="error"><h3>Please Enter Shipment Number</h3><p>Enter an AWB, Reference Number or Tracking Number and try again.</p></div>';
     return;
   }
 
@@ -685,7 +699,7 @@ function trackShipment(){
   window[callbackName]=function(data){
     try{
       if(!data || !data.success){
-        result.innerHTML='<div class="error"><h3>Tracking Number Not Found</h3><p>'
+        result.innerHTML='<div class="error"><h3>Shipment Not Found</h3><p>'
           +escapeHtml((data&&data.message)||("No shipment record was found for "+no+"."))
           +'</p><p style="margin-top:6px">Please check the tracking number and try again.</p></div>';
         return;
@@ -700,11 +714,33 @@ function trackShipment(){
       const lastUpdate=latest ? shortDateTime(latest.dateTime) : shortDate(s.bookingDate);
 
       const events=history.map(function(item){
+        const place=[item.city || "", item.country || ""].filter(Boolean).join(", ");
+
+        // Remarks may come from different backend aliases.
+        const remarksValue =
+          item.remarks ??
+          item.remark ??
+          item.movement_details ??
+          item.movementDetails ??
+          item.notes ??
+          "";
+
+        const remarksText=String(remarksValue || "").trim();
+
         return `
           <div class="event">
             <div class="event-dot"></div>
-            <h4>${escapeHtml(item.status)}</h4>
-            <p>${escapeHtml(item.city || "")}${item.country ? ", "+escapeHtml(item.country) : ""} &nbsp;•&nbsp; ${escapeHtml(shortDateTime(item.dateTime))}</p>
+            <h4>${escapeHtml(item.status || "Shipment Update")}</h4>
+            <p>
+              ${escapeHtml(place)}
+              ${place ? " &nbsp;•&nbsp; " : ""}
+              ${escapeHtml(shortDateTime(item.dateTime || item.entryTime))}
+            </p>
+            ${
+              remarksText
+                ? `<div class="event-remarks"><strong>Remarks:</strong> ${escapeHtml(remarksText)}</div>`
+                : ""
+            }
           </div>
         `;
       }).join("");
