@@ -122,14 +122,14 @@ textarea{min-height:105px;resize:vertical}
 </div>
 
 <div id="shipmentSearchMode" class="search-row">
-<input id="shipmentNumber" type="text" placeholder="Enter AWB / Reference Number / Tracking Number" onkeypress="enterSearch(event)">
+<input id="shipmentNumber" type="text" placeholder="Enter Shipment / AWB Number" onkeypress="enterSearch(event)">
 <button id="searchButton" class="btn-primary-custom" onclick="searchShipment()">
 <i class="bi bi-search"></i> Search
 </button>
 </div>
 
 <div id="manifestSearchMode" class="search-row" style="display:none">
-<input id="manifestNumber" type="text" placeholder="Enter Manifest Number" onkeypress="enterManifest(event)">
+<input id="manifestNumber" type="text" placeholder="Enter Manifest Number (e.g. MNF-10001)" onkeypress="enterManifest(event)">
 <button id="manifestSearchButton" class="btn-primary-custom" onclick="searchManifest()">
 <i class="bi bi-search"></i> Search Manifest
 </button>
@@ -551,7 +551,7 @@ function searchManifest() {
     },
     function(error) {
       setManifestLoading(false);
-      showAlert("Unable to connect to shipment tracking server. Please try again.", "error");
+      showAlert((error && error.message) || "Unable to connect to shipment tracking server. Please try again.", "error");
       console.error(error);
     }
   );
@@ -896,7 +896,7 @@ function submitStatus() {
     function(error) {
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-check-circle"></i> Submit Status';
-      showAlert("Unable to connect to shipment tracking server. Please try again.", "error");
+      showAlert((error && error.message) || "Unable to connect to shipment tracking server. Please try again.", "error");
       console.error(error);
     }
   );
@@ -939,7 +939,7 @@ function deleteHistory(index) {
       showAlert("Shipment status deleted successfully.", "success");
     },
     function(error) {
-      showAlert("Unable to connect to shipment tracking server. Please try again.", "error");
+      showAlert((error && error.message) || "Unable to connect to shipment tracking server. Please try again.", "error");
       console.error(error);
     }
   );
