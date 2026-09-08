@@ -1129,6 +1129,12 @@ const codCurrencies = [
     let bookingEditMode = false;
     let bookingRowNumber = "";
 
+    // Account values loaded from an existing shipment. The actual account
+    // dropdown is populated asynchronously, so keep these values here and
+    // apply them once the Accounts request finishes.
+    let pendingAccountCode = "";
+    let pendingAccountName = "";
+
     function setBookingFormEditable(editing) {
       const $form = $("#bookingForm");
       if (editing) {
@@ -1168,8 +1174,14 @@ const codCurrencies = [
       names.forEach(n => setField(n, record[n]));
 
       // Restore Account selection when an existing shipment is opened from Searching Booking.
+      // setAccountSelection() lives inside document.ready because it depends on
+      // the async Accounts list. Calling it here caused a ReferenceError and
+      // stopped the rest of Preview/Edit population. Store the values instead;
+      // loadBookingAccounts() applies them as soon as the dropdown is ready.
       if (record.account_code !== undefined || record.account_name !== undefined) {
-        setAccountSelection(record.account_code || "", record.account_name || "");
+        pendingAccountCode = String(record.account_code || "").trim();
+        pendingAccountName = String(record.account_name || "").trim();
+        $("#accountName").val(pendingAccountName);
       }
 
       // Select2 fields need their own value assignment.
@@ -1332,7 +1344,7 @@ const codCurrencies = [
 
       } catch (err) {
         console.error("Unable to load selected shipment", err);
-        alert("Shipment load nahi ho saki. Please Searching Booking se dobara open karein.");
+        alert("Shipment load nahi ho saki: " + (err && err.message ? err.message : "Unknown error"));
       }
     }
 
@@ -1452,7 +1464,10 @@ const codCurrencies = [
             });
 
             accountsLoaded = true;
-            setAccountSelection(selectedCode || "", selectedName || "");
+            setAccountSelection(
+              pendingAccountCode || selectedCode || "",
+              pendingAccountName || selectedName || ""
+            );
           },
           error: function () {
             bookingAccounts = [];
