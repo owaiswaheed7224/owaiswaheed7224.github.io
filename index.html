@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Arham Freight Logistics</title>
+  <title>Arham Freight Logistics | Courier & Global Logistics</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
@@ -415,6 +415,92 @@
       }
     }
 
+
+    /* ===== HOME PAGE ENHANCEMENTS ===== */
+    .section-kicker{
+      display:inline-block;
+      color:var(--brand);
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-size:.78rem;
+      margin-bottom:.5rem;
+    }
+    .section-title{font-weight:800;color:var(--dark);}
+    .section-subtitle{max-width:760px;margin:0 auto;color:#667788;}
+    .hero-content h1{font-weight:900;max-width:850px;text-align:center;}
+    .hero-content .lead{max-width:780px;text-align:center;font-weight:500;}
+    .hero-content .btn{border-radius:14px;font-weight:700;padding:.72rem 1.15rem;}
+    .feature-card{
+      border:1px solid #e8eef3;
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 8px 24px rgba(11,34,54,.07);
+      padding:28px 24px;
+      height:100%;
+      transition:transform .25s ease, box-shadow .25s ease;
+    }
+    .feature-card:hover{transform:translateY(-6px);box-shadow:0 14px 32px rgba(11,34,54,.12);}
+    .feature-icon{
+      width:62px;height:62px;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:29px;background:#eef7ff;margin-bottom:18px;
+    }
+    .feature-card h5{font-weight:800;color:var(--dark);}
+    .feature-card p{color:#6c7b88;margin-bottom:0;line-height:1.65;}
+    .global-band{
+      background:linear-gradient(135deg,#f2f9ff,#eefcff);
+      border-top:1px solid #e3f0fa;border-bottom:1px solid #e3f0fa;
+    }
+    .hub-pill{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:9px 16px;margin:4px;border-radius:999px;
+      background:#fff;border:1px solid #dceaf4;color:var(--dark);
+      font-weight:700;box-shadow:0 4px 12px rgba(11,34,54,.05);
+    }
+    .about-panel{
+      border-radius:24px;background:#0b2236;color:#fff;padding:38px;
+      box-shadow:0 14px 34px rgba(11,34,54,.16);
+    }
+    .about-panel p{color:#d7e8f4;line-height:1.8;}
+    .why-number{
+      font-size:13px;font-weight:800;color:var(--brand);
+      letter-spacing:.08em;text-transform:uppercase;
+    }
+    .process-wrap{position:relative;}
+    .process-line{
+      position:absolute;left:12%;right:12%;top:46px;height:2px;
+      background:#dceaf4;z-index:0;
+    }
+    .process-card{position:relative;z-index:1;text-align:center;}
+    .process-number{
+      width:92px;height:92px;border-radius:50%;margin:0 auto 18px;
+      display:flex;align-items:center;justify-content:center;
+      background:#fff;border:2px solid #d8eaf7;color:var(--brand);
+      font-size:24px;font-weight:900;box-shadow:0 8px 22px rgba(11,34,54,.08);
+    }
+    .process-card h5{font-weight:800;color:var(--dark);}
+    .process-card p{color:#6c7b88;line-height:1.6;}
+    .cod-banner{
+      border-radius:24px;padding:34px;
+      background:linear-gradient(135deg,#0b2236,#12476d);
+      color:#fff;box-shadow:0 14px 34px rgba(11,34,54,.16);
+    }
+    .cod-banner p{color:#dcecf7;line-height:1.7;}
+    .tracking-box{
+      background:#fff;border-radius:22px;padding:34px;
+      box-shadow:0 10px 28px rgba(11,34,54,.09);
+      border:1px solid #e7eef4;
+    }
+    .tracking-box .form-control{height:52px;border-radius:13px;}
+    .tracking-box .btn{height:52px;border-radius:13px;font-weight:700;}
+    .cta-section{background:#f5faff;}
+    @media(max-width:767.98px){
+      .process-line{display:none;}
+      .about-panel,.cod-banner,.tracking-box{padding:25px;}
+      .hero-content h1{font-size:2rem;}
+    }
+
   </style>
 
 </head>
@@ -422,69 +508,42 @@
 <body>
 
   <!-- NAVBAR -->
-
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <nav class="navbar navbar-expand-lg navbar-light">
     <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-3" href="index.html">
+        <img src="Logo.png" alt="Arham Freight Logo" class="logo-img">
+        <div>
+          <strong>Arham Freight</strong><br>
+          <small class="text-muted">Courier & Logistics</small>
+        </div>
+      </a>
 
-  <a class="navbar-brand d-flex align-items-center gap-3" href="#">
-    <img src="Logo.png" alt="Arham Freight Logo" class="logo-img">
-    <div>
-      <strong>Arham Freight</strong><br>
-      <small class="text-muted">Courier & Logistics</small>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item me-lg-2 mb-2 mb-lg-0">
+            <a href="tracking.html" class="btn btn-outline-primary">📦 Track Shipment</a>
+          </li>
+          <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="tracking.html">Tracking</a></li>
+          <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+          <li class="nav-item">
+            <button class="btn btn-primary ms-lg-3" data-bs-toggle="modal" data-bs-target="#loginChoiceModal">Login</button>
+          </li>
+        </ul>
+      </div>
     </div>
-  </a>
-
-  <button class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navmenu">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="navmenu">
-    <ul class="navbar-nav ms-auto align-items-lg-center">
-
-      <li class="nav-item me-lg-2 mb-2 mb-lg-0">
-        <a href="tracking.html" class="btn btn-outline-primary">
-          📦 Track Shipment
-        </a>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link active" href="#">Home</a>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link" href="#services">Services</a>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link" href="#contact">Contact</a>
-      </li>
-
-      <li class="nav-item">
-        <button class="btn btn-primary ms-lg-3"
-                data-bs-toggle="modal"
-                data-bs-target="#loginChoiceModal">
-          Login
-        </button>
-      </li>
-
-    </ul>
-  </div>
-</div>
-
   </nav>
 
   <!-- HERO -->
-
   <header class="hero">
-    <img class="hero-slide current"
-         src="worldwide-transpotation.jpg.png"
-         alt="Worldwide transportation and air freight">
-    <img class="hero-slide next"
-         src="transpotation.jpg.png"
-         alt="Arham Freight Logistics transportation">
+    <img class="hero-slide current" src="worldwide-transpotation.jpg.png" alt="Worldwide transportation and air freight">
+    <img class="hero-slide next" src="transpotation.jpg.png" alt="Arham Freight Logistics transportation">
 
     <button class="hero-arrow left" id="heroPrev" type="button" aria-label="Previous slide">&#10094;</button>
     <button class="hero-arrow right" id="heroNext" type="button" aria-label="Next slide">&#10095;</button>
@@ -495,107 +554,279 @@
     </div>
 
     <div class="hero-content">
-      <h1 class="display-5">
-        Reliable Freight & Logistics
-      </h1>
-
-      <p class="lead">
-        Domestic & international shipping — warehousing & cargo handling with fast, secure service.
-      </p>
-
-      <div class="d-flex gap-2 justify-content-center">
-        <a href="#contact" class="btn btn-primary">
-          Get a Quote
-        </a>
-
-        <a href="#services" class="btn btn-outline-light">
-          Our Services
-        </a>
+      <span class="section-kicker" style="color:#fff">Worldwide Courier & Logistics</span>
+      <h1 class="display-4">Reliable Courier & Logistics Solutions</h1>
+      <p class="lead">Fast, secure and dependable shipping solutions for individuals and businesses, connecting Pakistan with destinations across the world.</p>
+      <div class="d-flex flex-wrap gap-2 justify-content-center">
+        <a href="tracking.html" class="btn btn-primary">📦 Track Your Shipment</a>
+        <a href="#contact" class="btn btn-outline-light">Get a Quote</a>
       </div>
     </div>
   </header>
 
   <!-- SERVICES -->
-
   <section id="services" class="py-5">
+    <div class="container">
+      <div class="text-center mb-5">
+        <span class="section-kicker">Our Services</span>
+        <h2 class="section-title">Reliable Courier Services</h2>
+        <p class="section-subtitle">Complete shipping and logistics solutions for personal parcels, e-commerce orders and commercial cargo.</p>
+      </div>
 
-<div class="container">
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="feature-icon">🚚</div>
+            <h5>Road Transport</h5>
+            <p>Reliable and cost-effective road transportation for domestic and regional shipments, with safe handling and timely delivery.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="feature-icon">✈️</div>
+            <h5>Air Freight</h5>
+            <p>Fast international air freight solutions for urgent documents, parcels and commercial shipments to destinations worldwide.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card">
+            <div class="feature-icon">🏢</div>
+            <h5>Warehousing</h5>
+            <p>Secure warehousing and shipment handling solutions to keep your goods organized, protected and ready for dispatch.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-6">
+          <div class="feature-card">
+            <div class="feature-icon">📦</div>
+            <h5>Courier Services</h5>
+            <p>Fast and dependable courier delivery for documents, parcels and packages, with professional handling from pickup to destination.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-6">
+          <div class="feature-card">
+            <div class="feature-icon">🛃</div>
+            <h5>Customs Support</h5>
+            <p>Professional assistance with customs documentation and shipment clearance to help make international shipping easier and smoother.</p>
+          </div>
+        </div>
+      </div>
 
-  <div class="text-center mb-4">
-    <h2>Our Services</h2>
-    <p class="text-muted">
-      End-to-end logistics solutions tailored for your business.
-    </p>
-  </div>
-
-  <div class="row g-4">
-
-    <div class="col-md-6">
-      <div class="p-4 service-card h-100">
-        <h5>Air & Sea Freight</h5>
-        <p class="text-muted">
-          Competitive rates for international air and sea cargo.
-        </p>
+      <div class="text-center mt-4">
+        <a href="services.html" class="btn btn-primary px-4">View All Services</a>
       </div>
     </div>
+  </section>
 
-    <div class="col-md-6">
-      <div class="p-4 service-card h-100">
-        <h5>Warehousing</h5>
-        <p class="text-muted">
-          Secure storage, inventory management and fulfilment services.
-        </p>
+  <!-- GLOBAL COURIER SOLUTIONS -->
+  <section class="py-5 global-band">
+    <div class="container">
+      <div class="text-center mb-4">
+        <span class="section-kicker">Worldwide Network</span>
+        <h2 class="section-title">Global Courier Solutions</h2>
+        <p class="section-subtitle">We work worldwide through our major hubs, connecting shipments to destinations across the globe.</p>
+      </div>
+
+      <div class="text-center mb-5">
+        <span class="hub-pill">🇬🇧 UK</span>
+        <span class="hub-pill">🇺🇸 USA</span>
+        <span class="hub-pill">🇨🇦 CANADA</span>
+        <span class="hub-pill">🇦🇪 UAE</span>
+        <span class="hub-pill">🇸🇬 SINGAPORE</span>
+        <span class="hub-pill">🇦🇺 AUSTRALIA</span>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">🛒</div>
+            <h5>E-Commerce & COD Delivery</h5>
+            <p>Reliable e-commerce delivery worldwide, including Cash on Delivery services in the UAE. COD payments are settled within 3–5 days after successful delivery.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">🏭</div>
+            <h5>Commercial Cargo</h5>
+            <p>Flexible international cargo solutions for businesses, including commercial shipments, bulk consignments and international freight.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon">👤</div>
+            <h5>Personal Courier</h5>
+            <p>Secure and dependable international delivery for personal parcels, documents, gifts and packages around the world.</p>
+          </div>
+        </div>
       </div>
     </div>
+  </section>
 
-  </div>
-</div>
+  <!-- ABOUT -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+          <span class="section-kicker">About Impresto Courier</span>
+          <h2 class="section-title mb-3">Your Reliable Partner in Global Shipping</h2>
+          <p class="text-muted" style="line-height:1.8;">Impresto Courier provides reliable courier, air freight, road transport and logistics solutions for individuals and businesses. We focus on safe handling, timely delivery and dependable service from pickup to destination.</p>
+          <h5 class="fw-bold mt-4">Express Air Freight to Major Global Hubs</h5>
+          <div class="mt-2">
+            <span class="hub-pill">UK</span><span class="hub-pill">USA</span><span class="hub-pill">CANADA</span>
+            <span class="hub-pill">UAE</span><span class="hub-pill">SINGAPORE</span><span class="hub-pill">AUSTRALIA</span>
+          </div>
+          <a href="about.html" class="btn btn-primary mt-4 px-4">About Us</a>
+        </div>
+        <div class="col-lg-5">
+          <div class="about-panel">
+            <div style="font-size:46px;margin-bottom:14px;">🌍</div>
+            <h4 class="fw-bold">Worldwide Connections</h4>
+            <p class="mb-0">Our strategic hubs help us efficiently connect shipments from Pakistan and other origins to destinations across the world.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- COD HIGHLIGHT -->
+  <section class="py-4">
+    <div class="container">
+      <div class="cod-banner">
+        <div class="row align-items-center g-4">
+          <div class="col-lg-8">
+            <span class="section-kicker" style="color:#7ed8ff;">UAE E-Commerce</span>
+            <h2 class="fw-bold">UAE Cash on Delivery</h2>
+            <p class="mb-0">Send COD parcels to customers across the UAE. We deliver the shipment, collect payment from the customer and settle the COD amount within <strong>3–5 days after successful delivery</strong>.</p>
+          </div>
+          <div class="col-lg-4 text-lg-end">
+            <a href="contact.html" class="btn btn-light fw-bold px-4 py-2">Send COD Shipment</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- WHY CHOOSE US -->
+  <section class="py-5">
+    <div class="container">
+      <div class="text-center mb-5">
+        <span class="section-kicker">Why Choose Us</span>
+        <h2 class="section-title">Shipping You Can Rely On</h2>
+        <p class="section-subtitle">Dependable service, global reach and practical shipping solutions for every type of customer.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card"><div class="why-number">01 — Speed</div><h5 class="mt-2">Fast & Reliable Delivery</h5><p>We work to ensure your shipments reach their destination safely and on time.</p></div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card"><div class="why-number">02 — Reach</div><h5 class="mt-2">Worldwide Reach</h5><p>Our international network connects shipments from our major hubs to destinations across the globe.</p></div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card"><div class="why-number">03 — Care</div><h5 class="mt-2">Safe Shipment Handling</h5><p>Your documents, parcels and cargo are handled with care throughout the delivery process.</p></div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card"><div class="why-number">04 — COD</div><h5 class="mt-2">UAE Cash on Delivery</h5><p>Reliable COD collection with settlement within 3–5 days after successful delivery.</p></div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card"><div class="why-number">05 — Business</div><h5 class="mt-2">Business Solutions</h5><p>Flexible shipping solutions designed for e-commerce sellers, businesses and commercial shipments.</p></div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="feature-card"><div class="why-number">06 — Support</div><h5 class="mt-2">Dedicated Customer Support</h5><p>Our team is available to assist with your shipments and answer your questions.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="py-5 global-band">
+    <div class="container">
+      <div class="text-center mb-5">
+        <span class="section-kicker">Simple Process</span>
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">Simple shipping. Reliable delivery.</p>
+      </div>
+      <div class="process-wrap">
+        <div class="process-line"></div>
+        <div class="row g-4">
+          <div class="col-md-3 process-card">
+            <div class="process-number">01</div>
+            <h5>Book Your Shipment</h5>
+            <p>Provide your shipment details and choose the service that fits your requirements.</p>
+          </div>
+          <div class="col-md-3 process-card">
+            <div class="process-number">02</div>
+            <h5>Pickup</h5>
+            <p>Our team arranges pickup of your parcel, documents or cargo from your location.</p>
+          </div>
+          <div class="col-md-3 process-card">
+            <div class="process-number">03</div>
+            <h5>Track Your Shipment</h5>
+            <p>Use your tracking number to stay updated on your shipment's delivery progress.</p>
+          </div>
+          <div class="col-md-3 process-card">
+            <div class="process-number">04</div>
+            <h5>Safe Delivery</h5>
+            <p>Your shipment is delivered safely to the destination address.</p>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-5">
+        <strong>UAE COD:</strong> Book → Pickup → Delivery → COD Collected → Settlement in 3–5 Days
+      </div>
+    </div>
+  </section>
+
+  <!-- TRACKING -->
+  <section class="py-5">
+    <div class="container">
+      <div class="tracking-box">
+        <div class="row align-items-center g-4">
+          <div class="col-lg-6">
+            <span class="section-kicker">Shipment Tracking</span>
+            <h2 class="section-title mb-2">Track Your Shipment</h2>
+            <p class="text-muted mb-0">Enter your tracking number to get the latest update on your shipment.</p>
+          </div>
+          <div class="col-lg-6">
+            <form action="tracking.html" method="get" class="d-flex gap-2">
+              <input class="form-control" type="text" name="tracking" placeholder="Enter Tracking Number" aria-label="Tracking Number">
+              <button class="btn btn-primary px-4" type="submit">Track Now</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="py-5 cta-section">
+    <div class="container text-center">
+      <span class="section-kicker">Let's Ship</span>
+      <h2 class="section-title">Ready to Ship?</h2>
+      <p class="text-muted mx-auto" style="max-width:720px;">Whether it's a personal parcel, an e-commerce order, business shipment or international cargo, we're here to help.</p>
+      <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+        <a href="#contact" class="btn btn-primary px-4">Get a Quote</a>
+        <a href="#contact" class="btn btn-outline-primary px-4">Contact Us</a>
+      </div>
+    </div>
   </section>
 
   <!-- CONTACT -->
-
   <section id="contact" class="py-5">
-
-<div class="container">
-
-  <div class="row">
-
-    <div class="col-lg-6">
-
-      <h3>Contact Us</h3>
-
-      <ul class="list-unstyled">
-
-        <li>
-          <strong>Phone:</strong>
-          <a href="https://wa.me/923221763756"
-             target="_blank"
-             class="text-decoration-none">
-            +92 322 1763756
-          </a>
-        </li>
-
-        <li>
-          <strong>Email:</strong>
-          <a href="mailto:arhamfreightlogistics@gmail.com">
-            arhamfreightlogistics@gmail.com
-          </a>
-        </li>
-
-        <li>
-          <strong>Address:</strong>
-          P.E.C.H.S Karachi, Pakistan
-        </li>
-
-      </ul>
-
+    <div class="container">
+      <div class="row g-4 align-items-start">
+        <div class="col-lg-6">
+          <span class="section-kicker">Contact</span>
+          <h2 class="section-title">Let's Move Your Shipment</h2>
+          <p class="text-muted">Contact us for courier, freight, e-commerce, COD and logistics solutions.</p>
+        </div>
+        <div class="col-lg-6">
+          <ul class="list-unstyled mb-0">
+            <li class="mb-3"><strong>Phone:</strong> <a href="https://wa.me/923221763756" target="_blank" class="text-decoration-none">+92 322 1763756</a></li>
+            <li class="mb-3"><strong>Email:</strong> <a href="mailto:arhamfreightlogistics@gmail.com">arhamfreightlogistics@gmail.com</a></li>
+            <li><strong>Address:</strong> P.E.C.H.S Karachi, Pakistan</li>
+          </ul>
+        </div>
+      </div>
     </div>
-
-  </div>
-</div>
-
   </section>
 
   <!-- FOOTER -->
